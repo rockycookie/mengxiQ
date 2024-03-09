@@ -3,7 +3,7 @@ function QueueItem({ description, link, priority, deleteFuncion }) {
 	return (
 		<tr>
 			<td>{description}</td>
-			<td>{link}</td>
+			<td><a href={link}>{link}</a></td>
 			<td>{priority}</td>
 			<td>
 				<button>Edit</button>
