@@ -19,9 +19,15 @@ function Queue() {
       created_time: new Date(),
       priorityId: curPriorityId
 		});
+    newItems.sort((a, b) => {
+      let cmp = priorityLevelMap[b.priorityId].rank - priorityLevelMap[a.priorityId].rank;
+      if (cmp !== 0) {
+        return cmp;
+      } else {
+        return a.created_time - b.created_time;
+      }
+    })
 		setItems(newItems);
-    console.log("newItems: ");
-    console.log(newItems);
 	}
 
 	function deleteItem(id) {
