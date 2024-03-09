@@ -1,6 +1,7 @@
 import QueueItem from "./QueueItem";
 import { useState } from 'react';
 import { TextInput } from 'react-native';
+import { v4 as uuidv4 } from 'uuid';
 
 function Queue() {
 	const [items, setItems] = useState([]);
@@ -8,7 +9,15 @@ function Queue() {
 
 	function handleAddItem() {
 		const newItems = items.slice();
-		newItems.push({description: curDescription, link: "link", priority: "priority"});
+		newItems.push({description: curDescription, link: "link", priority: "priority", id: uuidv4()});
+		setItems(newItems);
+	}
+
+	function deleteItem(id) {
+		// console.log("deleteItem function called with id: " + id);
+		const newItems = items.filter(e => e.id !== id).slice();
+		// console.log("new items: ");
+		// console.log(newItems);
 		setItems(newItems);
 	}
 
@@ -34,6 +43,7 @@ function Queue() {
 					numberOfLines={5}
 					style={{width: '90%'}}
 					onChangeText={text => setCurDescription(text)}
+					placeholder="Enter item description"
 				/>
 			</div>
 			<div style={{width: '90%'}}>
@@ -52,6 +62,7 @@ function Queue() {
 						description={d.description}
 						link={d.link}
 						priority={d.priority}
+						deletFuncion={() => deleteItem(d.id)}
 					/>
        	})}
 			</table>

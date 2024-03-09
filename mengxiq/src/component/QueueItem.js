@@ -1,5 +1,5 @@
 
-function QueueItem({ description, link, priority }) {
+function QueueItem({ description, link, priority, deletFuncion }) {
 	return (
 		<tr>
 			<td>{description}</td>
@@ -7,7 +7,7 @@ function QueueItem({ description, link, priority }) {
 			<td>{priority}</td>
 			<td>
 				<button>Edit</button>
-				<button>Done/Delete</button>
+				<button onClick={deletFuncion}>Done/Delete</button>
 			</td>
 		</tr>
 	);
