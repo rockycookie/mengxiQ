@@ -1,10 +1,17 @@
 import QueueItem from "./QueueItem";
+import { useState } from 'react';
+import { TextInput } from 'react-native';
 
 function Queue() {
-	const items = [
-		{description: "Ask Ann for task1, this is a very very very long description", link: "https://abd.talk.com", priority: "Do it now"},
-		{description: "Spike why B happened", link: "https://abd.talk.com", priority: "Moon shooting"}
-	]
+	const [items, setItems] = useState([]);
+	const [curDescription, setCurDescription] = useState("");
+
+	function handleAddItem() {
+		const newItems = items.slice();
+		newItems.push({description: curDescription, link: "link", priority: "priority"});
+		setItems(newItems);
+	}
+
 	return (
 		<div>
 			<table>
@@ -20,14 +27,25 @@ function Queue() {
 					</td>
 				</tr>
 			</table>
-			<div class="input-group" style={{width: '90%', height: '200px'}}>
-				<span class="input-group-text">Description</span>
-				<textarea class="form-control" aria-label="With textarea"></textarea>
+			<div style={{width: '90%'}}>
+				<span style={{width: '10%'}}>Description</span>
+				<TextInput 
+					multiline={true}
+					numberOfLines={5}
+					style={{width: '90%'}}
+					onChangeText={text => setCurDescription(text)}
+				/>
 			</div>
 			<div style={{width: '90%'}}>
-				<button style={{width: '65%'}}>Add item</button>
+				<button
+					style={{width: '65%'}}
+					onClick={handleAddItem}
+				>
+					Add item
+				</button>
 				<button style={{width: '35%'}}>Hide</button>
 			</div>
+
 			<table style={{'margin-top': '15px'}}>
 				{items.map(function(d){
          	return <QueueItem
