@@ -6,10 +6,17 @@ import { v4 as uuidv4 } from 'uuid';
 function Queue() {
 	const [items, setItems] = useState([]);
 	const [curDescription, setCurDescription] = useState("");
+	const [curLink, setCurLink] = useState("");
+	const [curPriorityLevel, setCurPriorityLevel] = useState("");
 
 	function handleAddItem() {
 		const newItems = items.slice();
-		newItems.push({description: curDescription, link: "link", priority: "priority", id: uuidv4()});
+		newItems.push({
+			description: curDescription,
+			link: curLink,
+			priority: curPriorityLevel,
+			id: uuidv4()
+		});
 		setItems(newItems);
 	}
 
@@ -25,13 +32,16 @@ function Queue() {
 		<div>
 			<table>
 				<tr>
-					<td>Link: <input style={{width: '500px'}}/></td>
 					<td>
-						<select>
-							<option>Do it now</option>
-							<option>Important doable</option>
-							<option>Low-hanging fruit</option>
-							<option>Moon shooting</option>
+						Link: <input onChange={(e) => setCurLink(e.target.value)} style={{width: '500px'}}/>
+					</td>
+					<td>
+						<select onChange={(e) => setCurPriorityLevel(e.target.value)}>
+							<option value=''>Select priority</option>
+							<option value='Do it now'>Do it now</option>
+							<option value='Important doabl'>Important doable</option>
+							<option value='Low-hanging fruit'>Low-hanging fruit</option>
+							<option value='Moon shooting'>Moon shooting</option>
 						</select>
 					</td>
 				</tr>
