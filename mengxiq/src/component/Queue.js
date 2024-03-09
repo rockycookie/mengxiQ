@@ -2,22 +2,26 @@ import QueueItem from "./QueueItem";
 import { useState } from 'react';
 import { TextInput } from 'react-native';
 import { v4 as uuidv4 } from 'uuid';
+import { priorityLevelMap, priorityLevelMapKeys } from "./Common"
 
 function Queue() {
 	const [items, setItems] = useState([]);
 	const [curDescription, setCurDescription] = useState("");
 	const [curLink, setCurLink] = useState("");
-	const [curPriorityLevel, setCurPriorityLevel] = useState("");
+	const [curPriorityId, setCurPriorityId] = useState("");
 
 	function handleAddItem() {
 		const newItems = items.slice();
 		newItems.push({
 			description: curDescription,
 			link: curLink,
-			priority: curPriorityLevel,
-			id: uuidv4()
+			id: uuidv4(),
+      created_time: new Date(),
+      priorityId: curPriorityId
 		});
 		setItems(newItems);
+    console.log("newItems: ");
+    console.log(newItems);
 	}
 
 	function deleteItem(id) {
@@ -36,12 +40,12 @@ function Queue() {
 						Link: <input onChange={(e) => setCurLink(e.target.value)} style={{width: '500px'}}/>
 					</td>
 					<td>
-						<select onChange={(e) => setCurPriorityLevel(e.target.value)}>
-							<option value=''>Select priority</option>
-							<option value='Do it now'>Do it now</option>
-							<option value='Important doabl'>Important doable</option>
-							<option value='Low-hanging fruit'>Low-hanging fruit</option>
-							<option value='Moon shooting'>Moon shooting</option>
+						<select onChangeCapture={(e) => setCurPriorityId(e.target.value)}>
+							{
+                priorityLevelMapKeys.map(function(id){
+                  return <option value={id}>{priorityLevelMap[id].display}</option>
+                })
+              }
 						</select>
 					</td>
 				</tr>
@@ -71,7 +75,7 @@ function Queue() {
          	return <QueueItem
 						description={d.description}
 						link={d.link}
-						priority={d.priority}
+						priorityId={d.priorityId}
 						deleteFuncion={() => deleteItem(d.id)}
 					/>
        	})}
