@@ -72,7 +72,7 @@ function Queue() {
 						description={d.description}
 						link={d.link}
 						priority={d.priority}
-						deletFuncion={() => deleteItem(d.id)}
+						deleteFuncion={() => deleteItem(d.id)}
 					/>
        	})}
 			</table>
