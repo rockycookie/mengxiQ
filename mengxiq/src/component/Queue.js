@@ -1,5 +1,5 @@
 import QueueItem from "./QueueItem";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TextInput } from 'react-native';
 import { v4 as uuidv4 } from 'uuid';
 import { priorityLevelMap, priorityLevelMapKeys } from "./Common"
@@ -8,17 +8,30 @@ function Queue() {
   const [items, setItems] = useState([]);
   const [curDescription, setCurDescription] = useState("");
   const [curLink, setCurLink] = useState("");
-  const [curPriorityId, setCurPriorityId] = useState("");
+  const [curPriorityId, setCurPriorityId] = useState("select_priority");
+
+  useEffect(() => {
+    // Fetch from DB
+    fetch("http://localhost:8000/items")
+      .then(res => res.json())
+      .then((result) => {
+        console.log(result);
+        if (result.length > 0) {
+          setItems(result);
+        }
+      });
+  }, []);
 
   function handleAddItem() {
     const newItems = items.slice();
-    newItems.push({
+    const newItem = {
       description: curDescription,
       link: curLink,
       id: uuidv4(),
-      created_time: new Date(),
+      created_time: Date.now(),
       priorityId: curPriorityId
-    });
+    }
+    newItems.push(newItem);
     newItems.sort((a, b) => {
       let cmp = priorityLevelMap[b.priorityId].rank - priorityLevelMap[a.priorityId].rank;
       if (cmp !== 0) {
@@ -28,6 +41,16 @@ function Queue() {
       }
     })
     setItems(newItems);
+
+    // Store to DB
+    fetch(
+      "http://localhost:8000/items",
+      {
+        method: "POST",
+        body: JSON.stringify(newItem),
+        headers: {"Content-Type": "application/json"},
+      }
+    )
   }
 
   function deleteItem(id) {
@@ -36,6 +59,12 @@ function Queue() {
     // console.log("new items: ");
     // console.log(newItems);
     setItems(newItems);
+
+    // Remove from DB
+    fetch(
+      "http://localhost:8000/items/" + id,
+      {method: "DELETE"}
+    )
   }
 
   return (
