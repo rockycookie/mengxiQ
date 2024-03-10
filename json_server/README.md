@@ -28,10 +28,10 @@ http://localhost:8000/items
 
 ### Get items
 ```
-curl http://localhost:8000/items
+curl http://localhost:8000/queues/4153459b-4080-49ac-815a-f5ba7274ccd8
 ```
 
-### Create new item
+### Create new item (deprecated)
 ```
 curl -H 'Content-Type: application/json' \
 -d '{ "description":"This is a test description","link":"https://github.com", "id": "64e34701-4ecc-4559-8844-c53c50c11ccd", "created_time": 1710041136333, "priorityId": "important_doable"}' \
@@ -39,7 +39,15 @@ curl -H 'Content-Type: application/json' \
 http://localhost:8000/items
 ```
 
-### Delete item
+### Update item
+```
+curl -H 'Content-Type: application/json' \
+-d '{"id": "4153459b-4080-49ac-815a-f5ba7274ccd8", "name": "My testing queue", "items": [  { "id": "xasjkad701-4ecc-4559-8844-c53c50c11ccd", "description": "yes, it is working!!! updated!!!", "link": "https://github.com", "created_time": 1710040522800, "priorityId": "important_doable"  },  { "id": "695a93ca-a4b3-4493-a07a-03f6cd25c5d8", "description": "hahaha another item added from ui", "link": "hewkuwqeohwqjodenqw", "created_time": 1710041136333, "priorityId": "moon_shooting"}]}' \
+-X PUT \
+http://localhost:8000/queues/4153459b-4080-49ac-815a-f5ba7274ccd8
+```
+
+### Delete item (deprecated)
 Note:
 - The item object needs to have `id`
 - When mutiple items have the same `id`, it only deletes one of them
