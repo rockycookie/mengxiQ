@@ -3,8 +3,10 @@ import { useState, useEffect } from 'react';
 import { TextInput } from 'react-native';
 import { v4 as uuidv4 } from 'uuid';
 import { priorityLevelMap, priorityLevelMapKeys } from "./Common"
+import { getQueue } from "../db/JsonServer";
 
-function Queue() {
+function Queue({qid}) {
+  const queue_url = "http://localhost:8000/queues/" + qid
   const [items, setItems] = useState([]);
   const [curDescription, setCurDescription] = useState("");
   const [curLink, setCurLink] = useState("");
@@ -12,12 +14,11 @@ function Queue() {
 
   useEffect(() => {
     // Fetch from DB
-    fetch("http://localhost:8000/items")
-      .then(res => res.json())
+    getQueue(qid)
       .then((result) => {
         console.log(result);
-        if (result.length > 0) {
-          setItems(result);
+        if (result !== null) {
+          setItems(result.items);
         }
       });
   }, []);
@@ -43,14 +44,14 @@ function Queue() {
     setItems(newItems);
 
     // Store to DB
-    fetch(
-      "http://localhost:8000/items",
-      {
-        method: "POST",
-        body: JSON.stringify(newItem),
-        headers: {"Content-Type": "application/json"},
-      }
-    )
+    // fetch(
+    //   queue_url,
+    //   {
+    //     method: "POST",
+    //     body: JSON.stringify(newItem),
+    //     headers: {"Content-Type": "application/json"},
+    //   }
+    // )
   }
 
   function deleteItem(id) {
@@ -62,7 +63,7 @@ function Queue() {
 
     // Remove from DB
     fetch(
-      "http://localhost:8000/items/" + id,
+      queue_url + "/items/" + id,
       {method: "DELETE"}
     )
   }
@@ -78,7 +79,7 @@ function Queue() {
             <select onChangeCapture={(e) => setCurPriorityId(e.target.value)}>
               {
                 priorityLevelMapKeys.map(function (id) {
-                  return <option value={id}>{priorityLevelMap[id].display}</option>
+                  return <option value={id} key={id}>{priorityLevelMap[id].display}</option>
                 })
               }
             </select>
@@ -105,9 +106,10 @@ function Queue() {
         <button style={{ width: '35%' }}>Hide</button>
       </div>
 
-      <table style={{ 'margin-top': '15px' }}>
+      <table style={{ 'marginTop': '15px' }}>
         {items.map(function (d) {
           return <QueueItem
+            key={d.id}
             description={d.description}
             link={d.link}
             priorityId={d.priorityId}
