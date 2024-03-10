@@ -6,7 +6,6 @@ import { priorityLevelMap, priorityLevelMapKeys } from "./Common"
 import { addItemDb, deleteItemDb, getQueueDb } from "../db/JsonServer";
 
 function Queue({qid}) {
-  const queue_url = "http://localhost:8000/queues/" + qid
   const [items, setItems] = useState([]);
   const [curDescription, setCurDescription] = useState("");
   const [curLink, setCurLink] = useState("");
