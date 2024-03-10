@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { TextInput } from 'react-native';
 import { v4 as uuidv4 } from 'uuid';
 import { priorityLevelMap, priorityLevelMapKeys } from "./Common"
-import { getQueue } from "../db/JsonServer";
+import { addItemDb, deleteItemDb, getQueueDb } from "../db/JsonServer";
 
 function Queue({qid}) {
   const queue_url = "http://localhost:8000/queues/" + qid
@@ -13,8 +13,7 @@ function Queue({qid}) {
   const [curPriorityId, setCurPriorityId] = useState("select_priority");
 
   useEffect(() => {
-    // Fetch from DB
-    getQueue(qid)
+    getQueueDb(qid)
       .then((result) => {
         console.log(result);
         if (result !== null) {
@@ -43,29 +42,18 @@ function Queue({qid}) {
     })
     setItems(newItems);
 
-    // Store to DB
-    // fetch(
-    //   queue_url,
-    //   {
-    //     method: "POST",
-    //     body: JSON.stringify(newItem),
-    //     headers: {"Content-Type": "application/json"},
-    //   }
-    // )
+    addItemDb(qid, newItem);
   }
 
-  function deleteItem(id) {
+  function deleteItem(itemId) {
     // console.log("deleteItem function called with id: " + id);
-    const newItems = items.filter(e => e.id !== id).slice();
+    const newItems = items.filter(e => e.id !== itemId).slice();
     // console.log("new items: ");
     // console.log(newItems);
     setItems(newItems);
 
     // Remove from DB
-    fetch(
-      queue_url + "/items/" + id,
-      {method: "DELETE"}
-    )
+    deleteItemDb(qid, itemId);
   }
 
   return (
