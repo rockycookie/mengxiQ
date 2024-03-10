@@ -1,5 +1,20 @@
+import { useState, useEffect } from 'react';
+import { listQueuesDb } from '../db/JsonServer';
 
 function Header({setQid}) {
+
+  const [curCreateQueueName, setCurCreateQueueName] = useState("");
+  const [queues, setQueues] = useState([]);
+
+  useEffect(() => {
+    listQueuesDb().then(result => {
+      setQueues(result);
+      if (result !== null) {
+        setQid(result[0].id);
+      }
+    });
+  }, []);
+
 	return (
 		<div>
 			<table>
@@ -7,14 +22,15 @@ function Header({setQid}) {
 					<td>Current Queue Name</td>
 					<td>
 						<select onChange={(e) => setQid(e.target.value)}>
-							<option value="4153459b-4080-49ac-815a-f5ba7274ccd8">P2</option>
-							<option value="4153459b-4080-49ac-815a-f5ba7274ccd1">DevOps</option>
-							{/* <option>Feature request</option>
-							<option>Lunch and learn</option>
-							<option>Spike</option> */}
+              {queues.map(function (e) {
+                return <option value={e.id}>{e.name}</option>
+              })}
 						</select>
 					</td>
-					<td><button>Create New Queue</button></td>
+					<td>
+            <input onChange={e => setCurCreateQueueName(e.target.value)} />
+            <button>Create New Queue</button>
+          </td>
 				</tr>
 			</table>
 		</div>
