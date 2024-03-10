@@ -19,7 +19,7 @@ function Queue({qid}) {
           setItems(result.items);
         }
       });
-  }, []);
+  }, [qid]);
 
   function handleAddItem() {
     const newItems = items.slice();

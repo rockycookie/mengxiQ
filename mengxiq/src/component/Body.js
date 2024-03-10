@@ -1,9 +1,9 @@
 import Queue from "./Queue";
 
-function Body() {
+function Body({qid}) {
 	return (
 		<div>
-			<Queue qid="4153459b-4080-49ac-815a-f5ba7274ccd8"/>
+			<Queue qid={qid}/>
 		</div>
 	);
 }
