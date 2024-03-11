@@ -6,13 +6,13 @@ import { priorityLevelMap, priorityLevelMapKeys } from "./Common"
 import { addItemDb, deleteItemDb, getQueueDb } from "../db/JsonServer";
 
 function Queue({qid}) {
-  const queue_url = "http://localhost:8000/queues/" + qid
   const [items, setItems] = useState([]);
   const [curDescription, setCurDescription] = useState("");
   const [curLink, setCurLink] = useState("");
   const [curPriorityId, setCurPriorityId] = useState("select_priority");
 
   useEffect(() => {
+    console.log("Fetching queue info for: " + qid);
     getQueueDb(qid)
       .then((result) => {
         console.log(result);
@@ -20,7 +20,7 @@ function Queue({qid}) {
           setItems(result.items);
         }
       });
-  }, []);
+  }, [qid]);
 
   function handleAddItem() {
     const newItems = items.slice();

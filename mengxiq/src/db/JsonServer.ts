@@ -1,12 +1,35 @@
-
+import { v4 as uuidv4 } from 'uuid';
 
 const db_url = "http://localhost:8000"
 
+export async function listQueuesDb() {
+  return await (await fetch(db_url + "/queues/")).json();
+}
+
+export async function createQueueDb(qname: string): Promise<any> {
+  const newQueue = {
+    id: uuidv4(),
+    name: qname,
+    items: []
+  };
+  await fetch(
+    db_url + "/queues/",
+    {
+      method: "POST",
+      body: JSON.stringify(newQueue),
+      headers: {"Content-Type": "application/json"},
+    }
+  )
+  return newQueue;
+}
+
 export async function getQueueDb(qid: string) {
+  if (qid === "") { return undefined; }
   return await (await fetch(db_url + "/queues/" + qid)).json();
 }
 
 export async function addItemDb(qid: string, item: object) {
+  if (qid === "") { return; }
   const q = await getQueueDb(qid);
   if (q.items === null) {
     q.items = [item];
@@ -24,6 +47,7 @@ export async function addItemDb(qid: string, item: object) {
 }
 
 export async function deleteItemDb(qid: string, itemId: string) {
+  if (qid === "") { return; }
   const q = await getQueueDb(qid);
   if (q.items === null) {
     return;
