@@ -4,7 +4,7 @@ function QueueItem({ description, link, priorityId, deleteFuncion }) {
   return (
     <tr>
       <td>{description}</td>
-      <td><a href={link}>{link}</a></td>
+      <td><a href={link} target="_blank" rel="noopener noreferrer">reference link</a></td>
       <td>{priorityLevelMap[priorityId].display}</td>
       <td>
         <button>Edit</button>

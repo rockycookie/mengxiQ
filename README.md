@@ -23,5 +23,6 @@ npx json-server --watch ./json_server/real_db/work2024.json --port 8000
 ### 3. Spin up the React app
 ```
 cd mengxiq
-npm start
+npm run build
+npx serve -s build
 ```
