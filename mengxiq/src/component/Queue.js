@@ -12,6 +12,7 @@ function Queue({qid}) {
   const [curPriorityId, setCurPriorityId] = useState("select_priority");
 
   useEffect(() => {
+    console.log("Fetching queue info for: " + qid);
     getQueueDb(qid)
       .then((result) => {
         console.log(result);

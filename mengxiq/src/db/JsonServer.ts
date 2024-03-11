@@ -1,9 +1,26 @@
-
+import { v4 as uuidv4 } from 'uuid';
 
 const db_url = "http://localhost:8000"
 
 export async function listQueuesDb() {
   return await (await fetch(db_url + "/queues/")).json();
+}
+
+export async function createQueueDb(qname: string): Promise<any> {
+  const newQueue = {
+    id: uuidv4(),
+    name: qname,
+    items: []
+  };
+  await fetch(
+    db_url + "/queues/",
+    {
+      method: "POST",
+      body: JSON.stringify(newQueue),
+      headers: {"Content-Type": "application/json"},
+    }
+  )
+  return newQueue;
 }
 
 export async function getQueueDb(qid: string) {
