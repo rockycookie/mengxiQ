@@ -11,12 +11,22 @@ function Queue({qid}) {
   const [curLink, setCurLink] = useState("");
   const [curPriorityId, setCurPriorityId] = useState("select_priority");
 
+  const sortAlg = (a, b) => {
+    let cmp = priorityLevelMap[b.priorityId].rank - priorityLevelMap[a.priorityId].rank;
+    if (cmp !== 0) {
+      return cmp;
+    } else {
+      return a.created_time - b.created_time;
+    }
+  }
+
   useEffect(() => {
     console.log("Fetching queue info for: " + qid);
     getQueueDb(qid)
       .then((result) => {
-        console.log(result);
+        // console.log(result);
         if (result !== null) {
+          result.items.sort(sortAlg)
           setItems(result.items);
         }
       });
@@ -32,14 +42,7 @@ function Queue({qid}) {
       priorityId: curPriorityId
     }
     newItems.push(newItem);
-    newItems.sort((a, b) => {
-      let cmp = priorityLevelMap[b.priorityId].rank - priorityLevelMap[a.priorityId].rank;
-      if (cmp !== 0) {
-        return cmp;
-      } else {
-        return a.created_time - b.created_time;
-      }
-    })
+    newItems.sort(sortAlg);
     setItems(newItems);
 
     addItemDb(qid, newItem);
