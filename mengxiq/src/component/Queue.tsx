@@ -1,6 +1,6 @@
 import QueueItem from "./QueueItem";
 import { useState, useEffect } from 'react';
-// import { TextInput } from 'react-native';
+import { TextInput } from 'react-native';
 import { v4 as uuidv4 } from 'uuid';
 import { priorityLevelMap, priorityLevelMapKeys } from "../model/Priority"
 import { addItemDb, deleteItemDb, getQueueDb } from "../db/JsonServer";
@@ -10,7 +10,7 @@ function Queue(
   props: {qid: string}
 ): JSX.Element {
   const [items, setItems] = useState<ToDoItem[]>([]);
-  const [curDescription, setCurDescription] = useState("");
+  const [curDescription, setCurDescription] = useState<string>("");
   const [curLink, setCurLink] = useState("");
   const [curPriorityId, setCurPriorityId] = useState("select_priority");
 
@@ -82,13 +82,13 @@ function Queue(
       </table>
       <div style={{ width: '90%' }}>
         <span style={{ width: '10%' }}>Description</span>
-        {/* <TextInput
+        <TextInput
           multiline={true}
           numberOfLines={5}
           style={{ width: '90%' }}
           onChangeText={text => setCurDescription(text)}
           placeholder="Enter item description"
-        /> */}
+        />
       </div>
       <div style={{ width: '90%' }}>
         <button

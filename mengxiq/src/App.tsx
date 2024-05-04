@@ -3,7 +3,6 @@ import Body from "./component/Body";
 import { useState, useEffect } from 'react';
 
 function App() {
-
   const [qid, setQid] = useState<string>();
   
   useEffect(() => {

@@ -44,47 +44,6 @@
       "id": "d7d988ed-8655-4bd7-8adb-f8648643b661",
       "name": "ui created queue",
       "items": []
-    },
-    {
-      "id": "4c3386b6-fb01-4c89-916b-a3433391788b",
-      "name": "new queue!!!!",
-      "items": [
-        {
-          "description": "",
-          "link": "",
-          "id": "33232949-f032-4b0e-a639-f8ef1db8176d",
-          "created_time": 1714861626334,
-          "priorityId": "select_priority"
-        },
-        {
-          "description": "",
-          "link": "",
-          "id": "0fe50fbb-5d91-4c97-a646-677873afb16c",
-          "created_time": 1714861629372,
-          "priorityId": "select_priority"
-        },
-        {
-          "description": "",
-          "link": "www.github.com",
-          "id": "555d15d6-433b-49c6-af2d-650f9339dee4",
-          "created_time": 1714861643535,
-          "priorityId": "important_doable"
-        },
-        {
-          "description": "",
-          "link": "www.github.com",
-          "id": "834bc9c3-b186-4dfd-81cb-2dd51ac9d040",
-          "created_time": 1714861647336,
-          "priorityId": "do_it_now"
-        },
-        {
-          "description": "",
-          "link": "www.github.com",
-          "id": "e6be4257-d47a-40ab-ba8e-4b41891e857c",
-          "created_time": 1714861650697,
-          "priorityId": "low_hanging_fruit"
-        }
-      ]
     }
   ]
 }
