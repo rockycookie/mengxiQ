@@ -1,18 +1,21 @@
 import QueueItem from "./QueueItem";
 import { useState, useEffect } from 'react';
-import { TextInput } from 'react-native';
+// import { TextInput } from 'react-native';
 import { v4 as uuidv4 } from 'uuid';
-import { priorityLevelMap, priorityLevelMapKeys } from "./Common"
+import { priorityLevelMap, priorityLevelMapKeys } from "../model/Priority"
 import { addItemDb, deleteItemDb, getQueueDb } from "../db/JsonServer";
+import { ToDoItem } from "../model/ToDoItem";
 
-function Queue({qid}) {
-  const [items, setItems] = useState([]);
+function Queue(
+  props: {qid: string}
+): JSX.Element {
+  const [items, setItems] = useState<ToDoItem[]>([]);
   const [curDescription, setCurDescription] = useState("");
   const [curLink, setCurLink] = useState("");
   const [curPriorityId, setCurPriorityId] = useState("select_priority");
 
-  const sortAlg = (a, b) => {
-    let cmp = priorityLevelMap[b.priorityId].rank - priorityLevelMap[a.priorityId].rank;
+  const sortAlg = (a: ToDoItem, b: ToDoItem) => {
+    let cmp = priorityLevelMap.get(b.priorityId)!.rank - priorityLevelMap.get(a.priorityId)!.rank;
     if (cmp !== 0) {
       return cmp;
     } else {
@@ -21,8 +24,8 @@ function Queue({qid}) {
   }
 
   useEffect(() => {
-    console.log("Fetching queue info for: " + qid);
-    getQueueDb(qid)
+    console.log("Fetching queue info for: " + props.qid);
+    getQueueDb(props.qid)
       .then((result) => {
         // console.log(result);
         if (result !== null) {
@@ -30,25 +33,25 @@ function Queue({qid}) {
           setItems(result.items);
         }
       });
-  }, [qid]);
+  }, [props.qid]);
 
   function handleAddItem() {
     const newItems = items.slice();
-    const newItem = {
-      description: curDescription,
-      link: curLink,
-      id: uuidv4(),
-      created_time: Date.now(),
-      priorityId: curPriorityId
-    }
+    const newItem = new ToDoItem(
+      curDescription,
+      curLink,
+      uuidv4(),
+      Date.now(),
+      curPriorityId,
+    );
     newItems.push(newItem);
     newItems.sort(sortAlg);
-    setItems(newItems);
 
-    addItemDb(qid, newItem);
+    setItems(newItems);
+    addItemDb(props.qid, newItem);
   }
 
-  function deleteItem(itemId) {
+  function deleteItem(itemId: string) {
     // console.log("deleteItem function called with id: " + id);
     const newItems = items.filter(e => e.id !== itemId).slice();
     // console.log("new items: ");
@@ -56,7 +59,7 @@ function Queue({qid}) {
     setItems(newItems);
 
     // Remove from DB
-    deleteItemDb(qid, itemId);
+    deleteItemDb(props.qid, itemId);
   }
 
   return (
@@ -67,10 +70,10 @@ function Queue({qid}) {
             Link: <input onChange={(e) => setCurLink(e.target.value)} style={{ width: '500px' }} />
           </td>
           <td>
-            <select onChangeCapture={(e) => setCurPriorityId(e.target.value)}>
+            <select onChangeCapture={(e: React.ChangeEvent<HTMLSelectElement>) => setCurPriorityId(e.target.value)}>
               {
                 priorityLevelMapKeys.map(function (id) {
-                  return <option value={id} key={id}>{priorityLevelMap[id].display}</option>
+                  return <option value={id} key={id}>{priorityLevelMap.get(id)!.display}</option>
                 })
               }
             </select>
@@ -79,13 +82,13 @@ function Queue({qid}) {
       </table>
       <div style={{ width: '90%' }}>
         <span style={{ width: '10%' }}>Description</span>
-        <TextInput
+        {/* <TextInput
           multiline={true}
           numberOfLines={5}
           style={{ width: '90%' }}
           onChangeText={text => setCurDescription(text)}
           placeholder="Enter item description"
-        />
+        /> */}
       </div>
       <div style={{ width: '90%' }}>
         <button

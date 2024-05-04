@@ -1,9 +1,13 @@
 import Queue from "./Queue";
 
-function Body({qid}) {
+function Body(
+	props: {
+		qid: string
+	}
+) {
 	return (
 		<div>
-			<Queue qid={qid}/>
+			<Queue qid={props.qid}/>
 		</div>
 	);
 }

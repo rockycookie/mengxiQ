@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 
 function App() {
 
-  const [qid, setQid] = useState();
+  const [qid, setQid] = useState<string>();
   
   useEffect(() => {
     console.log("qid updated to: " + qid);
@@ -13,9 +13,10 @@ function App() {
   return (
     <div>
       <Header setQid={setQid}/>
-      <Body qid={qid}/>
+      <Body qid={qid!}/>
     </div>
   );
 }
 
 export default App;
+

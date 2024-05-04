@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react';
 import { createQueueDb, listQueuesDb } from '../db/JsonServer';
+import { PriorityQueue } from '../model/PriorityQueue';
 
-function Header({setQid}) {
+function Header(
+  props: {
+    setQid: (id: string) => void
+  }
+): JSX.Element {
 
   const [curCreateQueueName, setCurCreateQueueName] = useState("");
-  const [queues, setQueues] = useState([]);
-  const [curDisplayQueueId, setCurDisplayQueueId] = useState(null);
+  const [queues, setQueues] = useState<PriorityQueue[]>([]);
+  const [curDisplayQueueId, setCurDisplayQueueId] = useState<string | null>(null);
   const [triggerRerender, setTriggerRerender] = useState(0);
 
   useEffect(() => {
@@ -13,9 +18,9 @@ function Header({setQid}) {
       setQueues(result);
       if (result.length > 0) {
         if (curDisplayQueueId === null) {
-          setQid(result[0].id);
+          props.setQid(result[0].id);
         } else {
-          setQid(curDisplayQueueId);
+          props.setQid(curDisplayQueueId);
         }
       }
     });
@@ -37,7 +42,7 @@ function Header({setQid}) {
 				<tr>
 					<td>Current Queue Name</td>
 					<td>
-						<select onChange={(e) => setCurDisplayQueueId(e.target.value)}>
+						<select onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCurDisplayQueueId(e.target.value)}>
               {queues.map(function (e) {
                 return <option value={e.id}>{e.name}</option>
               })}

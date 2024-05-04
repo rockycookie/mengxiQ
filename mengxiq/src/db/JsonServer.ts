@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { ToDoItem } from '../model/ToDoItem';
 
 const db_url = "http://localhost:8000"
 
@@ -28,7 +29,7 @@ export async function getQueueDb(qid: string) {
   return await (await fetch(db_url + "/queues/" + qid)).json();
 }
 
-export async function addItemDb(qid: string, item: object) {
+export async function addItemDb(qid: string, item: ToDoItem) {
   if (qid === "") { return; }
   const q = await getQueueDb(qid);
   if (q.items === null) {
