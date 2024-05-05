@@ -5,7 +5,8 @@ function QueueItem(
     description: string,
     link: string,
     priorityId: string,
-    deleteFuncion: () => void
+    deleteFuncion: () => void,
+    reportFuncion: () => void,
   }
 ): JSX.Element {
   return (
@@ -15,7 +16,8 @@ function QueueItem(
       <td>{priorityLevelMap.get(props.priorityId)?.display}</td>
       <td>
         <button>Edit</button>
-        <button onClick={props.deleteFuncion}>Done/Delete</button>
+        <button className="btn-report-queue-item" onClick={props.reportFuncion}>Done/Report</button>
+        <button className="btn-delete-queue-item" onClick={props.deleteFuncion}>Delete</button>
       </td>
     </tr>
   );

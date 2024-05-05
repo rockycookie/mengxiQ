@@ -21,8 +21,13 @@ Simply create a JSON file in `./json_server/real_db` with content:
 for example `./json_server/real_db/work2024.json`
 
 ### 2. Spin up the db
+- Queue Items db
 ```
 npx json-server --watch ./json_server/real_db/work2024.json --port 8000
+```
+- Report db
+```
+npx json-server --watch ./json_server/real_db/report2024.json --port 8001
 ```
 
 ### 3. Spin up the React app

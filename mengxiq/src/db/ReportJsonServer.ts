@@ -1,22 +1,32 @@
 import { v4 as uuidv4 } from 'uuid';
+import { priorityLevelMap } from '../model/Priority';
 
 const db_url = "http://localhost:8001";
+
+export const current_report_id = "7ce7c617-82ab-4fa0-8cfd-051c02751862";
 
 export class Report {
   constructor(
     public id: string,
     public name: string,
     public items: ReportItem[],
-  ) {}
+  ) { }
 }
 
 export class ReportItem {
+  reportedAt: number
   constructor(
     public description: string,
     public link: string,
     public priorityId: string,
-    public queueName: string
-  ) {}
+    public priority: string,
+    public createdAt: number,
+    public create_time: string,
+    public qname: string,
+    public qid: string,
+  ) {
+    this.reportedAt = Date.now()
+  }
 }
 
 export async function listReportsDb() {
@@ -30,7 +40,7 @@ export async function createReportDb(rname: string): Promise<Report> {
     {
       method: "POST",
       body: JSON.stringify(newReport),
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
     }
   )
   return newReport;
@@ -53,14 +63,14 @@ export async function addReportItemDb(
   } else {
     r.items.push(item);
   }
-	r.items.sort(sortAlg);
+  r.items.sort(sortAlg);
 
   await fetch(
     db_url + "/reports/" + rid,
     {
       method: "PUT",
       body: JSON.stringify(r),
-      headers: {"Content-Type": "application/json"}
+      headers: { "Content-Type": "application/json" }
     }
   )
 }
