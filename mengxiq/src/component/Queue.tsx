@@ -25,6 +25,31 @@ function Queue(
     }
   }
 
+  const sortReportAlg = (a: ReportItem, b: ReportItem) => {
+    /* Sort by:
+        1. Reported date --> so that we group report items for each day
+        2. Queue name
+        3. Priority
+    */
+    let aReportedTime = new Date(a.reportedAt);
+    let bReportedTime = new Date(b.reportedAt);
+
+    // rd -> Reported Date for sorting
+    let ard = aReportedTime.getFullYear() * 10000 + (aReportedTime.getMonth()+1) * 100 + aReportedTime.getDate();
+    let brd = bReportedTime.getFullYear() * 10000 + (bReportedTime.getMonth()+1) * 100 + bReportedTime.getDate();
+    if (ard === brd) {
+      if (a.qname === b.qname) {
+        // higher/larger comes first
+        return priorityLevelMap.get(b.priorityId)!.rank - priorityLevelMap.get(a.priorityId)!.rank;
+      } else {
+        // Don't care, just ensure grouping by queue names
+        return a.qname.localeCompare(b.qname);
+      }
+    } else {
+      return brd - ard; // later/larger comes first
+    }
+  }
+
   useEffect(() => {
     // console.log("Fetching queue info for: " + props.qid);
     getQueueDb(props.qid)
@@ -83,13 +108,7 @@ function Queue(
         qname,
         props.qid,
       ),
-      (a: ReportItem, b: ReportItem) => {
-        if (a.qname === b.qname) {
-          return priorityLevelMap.get(b.priorityId)!.rank - priorityLevelMap.get(a.priorityId)!.rank;
-        } else {
-          return a.qname.localeCompare(b.qname);
-        }
-      }
+      sortReportAlg
     );
     // Remove from DB
     deleteItemDb(props.qid, itemId);
