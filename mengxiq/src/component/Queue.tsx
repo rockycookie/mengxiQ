@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { priorityLevelMap, priorityLevelMapKeys } from "../model/Priority"
 import { addItemDb, deleteItemDb, getQueueDb } from "../db/JsonServer";
 import { ToDoItem } from "../model/ToDoItem";
+import { ReportItem, addReportItemDb, current_report_id } from "../db/ReportJsonServer";
 
 function Queue(
   props: {qid: string}
@@ -13,6 +14,7 @@ function Queue(
   const [curDescription, setCurDescription] = useState<string>("");
   const [curLink, setCurLink] = useState("");
   const [curPriorityId, setCurPriorityId] = useState("select_priority");
+  const [qname, setQname] = useState<string>("");
 
   const sortAlg = (a: ToDoItem, b: ToDoItem) => {
     let cmp = priorityLevelMap.get(b.priorityId)!.rank - priorityLevelMap.get(a.priorityId)!.rank;
@@ -23,14 +25,34 @@ function Queue(
     }
   }
 
+  const sortReportAlg = (a: ReportItem, b: ReportItem) => {
+    /* Sort by:
+        1. Reported date --> so that we group report items for each day
+        2. Queue name
+        3. Priority
+    */
+    if (a.reportedAt === b.reportedAt) {
+      if (a.qname === b.qname) {
+        // higher/larger comes first
+        return priorityLevelMap.get(b.priorityId)!.rank - priorityLevelMap.get(a.priorityId)!.rank;
+      } else {
+        // Don't care, just ensure grouping by queue names
+        return a.qname.localeCompare(b.qname);
+      }
+    } else {
+      return b.reportedAt - a.reportedAt; // later/larger comes first
+    }
+  }
+
   useEffect(() => {
-    console.log("Fetching queue info for: " + props.qid);
+    // console.log("Fetching queue info for: " + props.qid);
     getQueueDb(props.qid)
       .then((result) => {
         // console.log(result);
         if (result !== null) {
           result.items.sort(sortAlg)
           setItems(result.items);
+          setQname(result.name);
         }
       });
   }, [props.qid]);
@@ -58,6 +80,30 @@ function Queue(
     // console.log(newItems);
     setItems(newItems);
 
+    // Remove from DB
+    deleteItemDb(props.qid, itemId);
+  }
+
+  function reportItem(itemId: string) {
+    const item = items.filter(e => e.id === itemId)[0];
+    const newItems = items.filter(e => e.id !== itemId).slice();
+    setItems(newItems);
+
+    // Report to DB
+    addReportItemDb(
+      current_report_id,
+      new ReportItem(
+        item.description,
+        item.link,
+        item.priorityId,
+        priorityLevelMap.get(item.priorityId)!.display,
+        item.created_time,
+        new Date(item.created_time).toLocaleString(),
+        qname,
+        props.qid,
+      ),
+      sortReportAlg
+    );
     // Remove from DB
     deleteItemDb(props.qid, itemId);
   }
@@ -108,6 +154,7 @@ function Queue(
             link={d.link}
             priorityId={d.priorityId}
             deleteFuncion={() => deleteItem(d.id)}
+            reportFuncion={() => reportItem(d.id)}
           />
         })}
       </table>
