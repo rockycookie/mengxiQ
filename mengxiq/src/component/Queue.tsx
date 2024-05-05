@@ -31,13 +31,7 @@ function Queue(
         2. Queue name
         3. Priority
     */
-    let aReportedTime = new Date(a.reportedAt);
-    let bReportedTime = new Date(b.reportedAt);
-
-    // rd -> Reported Date for sorting
-    let ard = aReportedTime.getFullYear() * 10000 + (aReportedTime.getMonth()+1) * 100 + aReportedTime.getDate();
-    let brd = bReportedTime.getFullYear() * 10000 + (bReportedTime.getMonth()+1) * 100 + bReportedTime.getDate();
-    if (ard === brd) {
+    if (a.reportedAt === b.reportedAt) {
       if (a.qname === b.qname) {
         // higher/larger comes first
         return priorityLevelMap.get(b.priorityId)!.rank - priorityLevelMap.get(a.priorityId)!.rank;
@@ -46,7 +40,7 @@ function Queue(
         return a.qname.localeCompare(b.qname);
       }
     } else {
-      return brd - ard; // later/larger comes first
+      return b.reportedAt - a.reportedAt; // later/larger comes first
     }
   }
 
