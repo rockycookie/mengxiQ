@@ -36,26 +36,26 @@ function Header(
       });
   }
 
-	return (
-		<div>
-			<table>
-				<tr>
-					<td>Current Queue Name</td>
-					<td>
-						<select onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCurDisplayQueueId(e.target.value)}>
+  return (
+    <div>
+      <table>
+        <tr>
+          <td>Current Queue Name</td>
+          <td>
+            <select onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCurDisplayQueueId(e.target.value)}>
               {queues.map(function (e) {
                 return <option value={e.id}>{e.name}</option>
               })}
-						</select>
-					</td>
-					<td>
+            </select>
+          </td>
+          <td>
             <input onChange={e => setCurCreateQueueName(e.target.value)} />
             <button onClick={handleQueueCreation}>Create New Queue</button>
           </td>
-				</tr>
-			</table>
-		</div>
-	);
+        </tr>
+      </table>
+    </div>
+  );
 }
 
 export default Header;
