@@ -11,5 +11,5 @@ Note currently, we need to initialize new db files with content:
 ## To run the server for a real db
 ### Example:
 ```
-npx json-server --watch ./real_db/work2024.json --port 8000
+npx json-server --watch ./real_db/work2024.json --port 8002
 ```

@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { ToDoItem } from '../model/ToDoItem';
 
-const db_url = "http://localhost:8000"
+const db_url = "http://localhost:8002"
 
 export async function listQueuesDb() {
   return await (await fetch(db_url + "/queues/")).json();

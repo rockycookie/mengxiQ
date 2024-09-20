@@ -23,7 +23,7 @@ for example `./json_server/real_db/work2024.json`
 ### 2. Spin up the db
 - Queue Items db
 ```
-npx json-server --watch ./json_server/real_db/work2024.json --port 8000
+npx json-server --watch ./json_server/real_db/work2024.json --port 8002
 ```
 - Report db
 ```
