@@ -6,6 +6,8 @@ function Report(): JSX.Element {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'recent'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     loadReport();
@@ -78,7 +80,23 @@ function Report(): JSX.Element {
     return report.items;
   }
 
+  function getPaginatedItems(): ReportItem[] {
+    const filtered = getFilteredItems();
+    
+    // Apply pagination to all tabs
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filtered.slice(startIndex, endIndex);
+  }
+
+  function handleTabChange(tab: 'all' | 'recent') {
+    setActiveTab(tab);
+    setCurrentPage(1); // Reset to first page when switching tabs
+  }
+
   const filteredItems = getFilteredItems();
+  const paginatedItems = getPaginatedItems();
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
   if (loading) {
     return (
@@ -137,7 +155,7 @@ function Report(): JSX.Element {
           <div className="border-b border-gray-200">
             <div className="flex gap-2 px-6">
                 <button
-                    onClick={() => setActiveTab('recent')}
+                    onClick={() => handleTabChange('recent')}
                     className={`px-4 py-3 font-medium text-sm transition-all duration-150 border-b-2 ${
                     activeTab === 'recent'
                         ? 'border-blue-500 text-blue-600'
@@ -147,7 +165,7 @@ function Report(): JSX.Element {
                     Since last workday ({filteredItems.length})
               </button>
               <button
-                onClick={() => setActiveTab('all')}
+                onClick={() => handleTabChange('all')}
                 className={`px-4 py-3 font-medium text-sm transition-all duration-150 border-b-2 ${
                   activeTab === 'all'
                     ? 'border-blue-500 text-blue-600'
@@ -160,13 +178,14 @@ function Report(): JSX.Element {
           </div>
 
           {/* Report Items */}
-          {filteredItems.length === 0 ? (
+          {paginatedItems.length === 0 ? (
             <div className="p-12 text-center">
               <p className="text-gray-500 text-lg">No items found for this filter.</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
-              {filteredItems.map((item: ReportItem, index: number) => (
+            <>
+              <div className="divide-y divide-gray-200">
+                {paginatedItems.map((item: ReportItem, index: number) => (
               <div key={index} className="p-6 hover:bg-gray-50 transition-colors duration-150">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
@@ -216,7 +235,76 @@ function Report(): JSX.Element {
                 </div>
               </div>
             ))}
-          </div>
+              </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600">
+                      Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredItems.length)} of {filteredItems.length} items
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${
+                          currentPage === 1
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                        }`}
+                      >
+                        ← Previous
+                      </button>
+                      
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                          // Show first page, last page, current page, and pages around current
+                          const showPage = page === 1 || 
+                                          page === totalPages || 
+                                          (page >= currentPage - 1 && page <= currentPage + 1);
+                          
+                          const showEllipsis = (page === currentPage - 2 && currentPage > 3) ||
+                                              (page === currentPage + 2 && currentPage < totalPages - 2);
+                          
+                          if (showEllipsis) {
+                            return <span key={page} className="px-2 text-gray-400">...</span>;
+                          }
+                          
+                          if (!showPage) return null;
+                          
+                          return (
+                            <button
+                              key={page}
+                              onClick={() => setCurrentPage(page)}
+                              className={`px-3 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${
+                                currentPage === page
+                                  ? 'bg-blue-500 text-white'
+                                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <button
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${
+                          currentPage === totalPages
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                        }`}
+                      >
+                        Next →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
