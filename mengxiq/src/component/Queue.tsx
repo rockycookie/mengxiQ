@@ -2,7 +2,7 @@ import QueueItem from "./QueueItem";
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { priorityLevelMap, priorityLevelMapKeys } from "../model/Priority"
-import { addItemDb, deleteItemDb, getQueueDb } from "../db/JsonServer";
+import { addItemDb, deleteItemDb, getQueueDb, updateItemDb } from "../db/JsonServer";
 import { ToDoItem } from "../model/ToDoItem";
 import { ReportItem, addReportItemDb, current_report_id } from "../db/ReportJsonServer";
 
@@ -15,6 +15,7 @@ function Queue(
   const [curPriorityId, setCurPriorityId] = useState("select_priority");
   const [qname, setQname] = useState<string>("");
   const [showForm, setShowForm] = useState(true);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
 
   const sortAlg = (a: ToDoItem, b: ToDoItem) => {
     let cmp = priorityLevelMap.get(b.priorityId)!.rank - priorityLevelMap.get(a.priorityId)!.rank;
@@ -121,6 +122,26 @@ function Queue(
     );
     // Remove from DB
     deleteItemDb(props.qid, itemId);
+  }
+
+  function updateItem(itemId: string, description: string, link: string, priorityId: string) {
+    const updatedItems = items.map(item => {
+      if (item.id === itemId) {
+        const updatedItem = new ToDoItem(
+          description,
+          link,
+          item.id,
+          item.created_time,
+          priorityId
+        );
+        updateItemDb(props.qid, updatedItem);
+        return updatedItem;
+      }
+      return item;
+    });
+    updatedItems.sort(sortAlg);
+    setItems(updatedItems);
+    setEditingItemId(null);
   }
 
   // Get priority button styling
@@ -235,6 +256,10 @@ function Queue(
               description={d.description}
               link={d.link}
               priorityId={d.priorityId}
+              isEditing={editingItemId === d.id}
+              onEdit={() => setEditingItemId(d.id)}
+              onCancelEdit={() => setEditingItemId(null)}
+              onSaveEdit={(desc, link, priority) => updateItem(d.id, desc, link, priority)}
               deleteFuncion={() => deleteItem(d.id)}
               reportFuncion={() => reportItem(d.id)}
             />

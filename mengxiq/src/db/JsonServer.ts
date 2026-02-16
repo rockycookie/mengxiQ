@@ -64,3 +64,23 @@ export async function deleteItemDb(qid: string, itemId: string) {
     }
   )
 }
+
+export async function updateItemDb(qid: string, updatedItem: ToDoItem) {
+  if (qid === "") { return; }
+  const q = await getQueueDb(qid);
+  if (q.items === null) {
+    return;
+  } else {
+    q.items = q.items.map((item: any) => 
+      item.id === updatedItem.id ? updatedItem : item
+    );
+  }
+  await fetch(
+    db_url + "/queues/" + qid,
+    {
+      method: "PUT",
+      body: JSON.stringify(q),
+      headers: {"Content-Type": "application/json"},
+    }
+  )
+}
