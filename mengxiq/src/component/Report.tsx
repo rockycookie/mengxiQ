@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Report as ReportType, ReportItem, getReportDb, current_report_id } from '../db/ReportJsonServer';
+import { priorityLevelMap } from '../model/Priority';
 
 function Report(): JSX.Element {
   const [report, setReport] = useState<ReportType | null>(null);
@@ -66,15 +67,30 @@ function Report(): JSX.Element {
            today.getDate();
   }
 
+  function getPriorityRank(priorityId: string): number {
+    const priority = priorityLevelMap.get(priorityId);
+    return priority ? priority.rank : 0;
+  }
+
   function getFilteredItems(): ReportItem[] {
     if (!report || !report.items) return [];
     
     if (activeTab === 'recent') {
       const lastWorkDay = getLastWorkDayTimestamp();
       const today = getTodayTimestamp();
-      return report.items.filter(item => 
+      const filtered = report.items.filter(item => 
         item.reportedAt >= lastWorkDay && item.reportedAt <= today
       );
+      
+      // Sort by priority (high to low), then by creation time (old to new)
+      return filtered.sort((a, b) => {
+        const priorityDiff = getPriorityRank(b.priorityId) - getPriorityRank(a.priorityId);
+        if (priorityDiff !== 0) {
+          return priorityDiff;
+        }
+        // When priority is the same, sort by creation time (old to new)
+        return a.createdAt - b.createdAt;
+      });
     }
     
     return report.items;
