@@ -97,6 +97,16 @@ function Report(): JSX.Element {
   const filteredItems = getFilteredItems();
   const paginatedItems = getPaginatedItems();
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  
+  // Calculate recent items count for tab display
+  const recentItemsCount = (() => {
+    if (!report || !report.items) return 0;
+    const lastWorkDay = getLastWorkDayTimestamp();
+    const today = getTodayTimestamp();
+    return report.items.filter(item => 
+      item.reportedAt >= lastWorkDay && item.reportedAt <= today
+    ).length;
+  })();
 
   if (loading) {
     return (
@@ -162,7 +172,7 @@ function Report(): JSX.Element {
                         : 'border-transparent text-gray-600 hover:text-gray-800'
                     }`}
                 >
-                    Since last workday ({filteredItems.length})
+                    Since Last Workday ({recentItemsCount})
               </button>
               <button
                 onClick={() => handleTabChange('all')}
