@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Report as ReportType, ReportItem, getReportDb, current_report_id } from '../db/ReportJsonServer';
-import { priorityLevelMap } from '../model/Priority';
 
 function Report(): JSX.Element {
   const [report, setReport] = useState<ReportType | null>(null);
@@ -25,12 +24,12 @@ function Report(): JSX.Element {
     }
   }
 
-  function getPriorityColor(priorityId: string): string {
-    const priorityNum = parseInt(priorityId);
-    if (priorityNum <= 2) return 'bg-red-100 text-red-800 border-red-300';
-    if (priorityNum <= 4) return 'bg-orange-100 text-orange-800 border-orange-300';
-    if (priorityNum <= 6) return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-    if (priorityNum <= 8) return 'bg-blue-100 text-blue-800 border-blue-300';
+  function getPriorityColor(priority: string): string {
+    const priorityLower = priority.toLowerCase();
+    if (priorityLower.includes('do it now')) return 'bg-red-50 text-red-700 border-red-300';
+    if (priorityLower.includes('important doable')) return 'bg-orange-50 text-orange-700 border-orange-300';
+    if (priorityLower.includes('low-hanging fruit') || priorityLower.includes('low hanging fruit')) return 'bg-yellow-50 text-yellow-700 border-yellow-300';
+    if (priorityLower.includes('moon shooting')) return 'bg-blue-50 text-blue-700 border-blue-300';
     return 'bg-gray-100 text-gray-800 border-gray-300';
   }
 
@@ -139,11 +138,8 @@ function Report(): JSX.Element {
 
                   {/* Priority Badge */}
                   <div className="flex-shrink-0">
-                    <div className={`px-4 py-2 rounded-lg border-2 ${getPriorityColor(item.priorityId)} font-semibold text-sm text-center min-w-[100px]`}>
-                      P{item.priorityId}
-                      <div className="text-xs font-normal mt-1">
-                        {item.priority}
-                      </div>
+                    <div className={`px-4 py-2 rounded-lg border-2 ${getPriorityColor(item.priority)} font-semibold text-sm text-center min-w-[100px]`}>
+                      {item.priority}
                     </div>
                   </div>
                 </div>

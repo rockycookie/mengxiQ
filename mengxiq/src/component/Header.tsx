@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { createQueueDb, listQueuesDb } from '../db/JsonServer';
 import { PriorityQueue } from '../model/PriorityQueue';
 
@@ -10,7 +10,6 @@ function Header(
 ): JSX.Element {
 
   const navigate = useNavigate();
-  const location = useLocation();
   const [curCreateQueueName, setCurCreateQueueName] = useState("");
   const [queues, setQueues] = useState<PriorityQueue[]>([]);
   const [curDisplayQueueId, setCurDisplayQueueId] = useState<string | null>(null);
@@ -55,7 +54,6 @@ function Header(
 
   function handleQueueSwitch(qid: string) {
     setCurDisplayQueueId(qid);
-    navigate('/');
   }
 
   return (
@@ -63,8 +61,7 @@ function Header(
       <div className="max-w-6xl mx-auto px-4">
         {/* App Title */}
         <div className="py-4 border-b border-gray-200">
-          <h1 
-            className="text-2xl font-bold text-gray-800 cursor-pointer hover:text-blue-600 transition-colors duration-150"
+          <h1 className="text-2xl font-bold text-gray-800 cursor-pointer hover:text-blue-600 transition-colors duration-150"
             onClick={() => navigate('/')}
           >
             📋 MengxiQ
@@ -73,70 +70,70 @@ function Header(
         </div>
 
         {/* Queue Tabs */}
-        <div className="flex items-center gap-2 py-3 overflow-x-auto">
-          {/* Create Queue Button */}
-          {!showCreateForm ? (
-            <button
-              onClick={() => setShowCreateForm(true)}
-              className="px-4 py-2 rounded-t-lg font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-all duration-150 whitespace-nowrap"
-            >
-              ➕ New Queue
-            </button>
-          ) : (
-            <div className="flex items-center gap-2 bg-green-50 px-3 py-2 rounded-lg">
-              <input
-                type="text"
-                value={curCreateQueueName}
-                onChange={e => setCurCreateQueueName(e.target.value)}
-                onKeyPress={e => e.key === 'Enter' && handleQueueCreation()}
-                placeholder="Queue name..."
-                className="px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                autoFocus
-              />
+        <div className="py-3">
+          {/* Actions Row */}
+          <div className="flex items-center gap-2 mb-3">
+            {/* Create Queue Button */}
+            {!showCreateForm ? (
               <button
-                onClick={handleQueueCreation}
-                className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors duration-150 text-sm font-medium"
+                onClick={() => setShowCreateForm(true)}
+                className="px-4 py-2 rounded-lg font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-all duration-150 whitespace-nowrap"
               >
-                ✓
+                ➕ New Queue
               </button>
-              <button
-                onClick={() => {
-                  setShowCreateForm(false);
-                  setCurCreateQueueName("");
-                }}
-                className="px-3 py-1 bg-gray-400 text-white rounded hover:bg-gray-500 transition-colors duration-150 text-sm font-medium"
-              >
-                ✕
-              </button>
-            </div>
-          )}
-          
-          {queues.map((queue) => (
-            <button
-              key={queue.id}
-              onClick={() => handleQueueSwitch(queue.id)}
-              className={`px-4 py-2 rounded-t-lg font-medium transition-all duration-150 whitespace-nowrap ${
-                curDisplayQueueId === queue.id
-                  ? 'bg-blue-500 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {queue.name}
-            </button>
-          ))}
+            ) : (
+              <div className="flex items-center gap-2 bg-green-50 px-3 py-2 rounded-lg">
+                <input
+                  type="text"
+                  value={curCreateQueueName}
+                  onChange={e => setCurCreateQueueName(e.target.value)}
+                  onKeyPress={e => e.key === 'Enter' && handleQueueCreation()}
+                  placeholder="Queue name..."
+                  className="px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  autoFocus
+                />
+                <button
+                  onClick={handleQueueCreation}
+                  className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors duration-150 text-sm font-medium"
+                >
+                  ✓
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCreateForm(false);
+                    setCurCreateQueueName("");
+                  }}
+                  className="px-3 py-1 bg-gray-400 text-white rounded hover:bg-gray-500 transition-colors duration-150 text-sm font-medium"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
 
-          {/* Report Navigation Button */}
-          <div className="flex-1 flex justify-end">
+            {/* Report Navigation Button */}
             <button
               onClick={() => navigate('/report')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all duration-150 whitespace-nowrap ${
-                location.pathname === '/report'
-                  ? 'bg-purple-500 text-white shadow-md'
-                  : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-              }`}
+              className="px-4 py-2 rounded-lg font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 transition-all duration-150 whitespace-nowrap"
             >
               📊 Reports
             </button>
+          </div>
+
+          {/* Queue Tabs Row */}
+          <div className="flex items-center gap-2 overflow-x-auto mb-2">
+            {queues.map((queue) => (
+              <button
+                key={queue.id}
+                onClick={() => handleQueueSwitch(queue.id)}
+                className={`px-4 py-2 rounded-t-lg font-medium transition-all duration-150 whitespace-nowrap ${
+                  curDisplayQueueId === queue.id
+                    ? 'bg-blue-500 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {queue.name}
+              </button>
+            ))}
           </div>
         </div>
       </div>
