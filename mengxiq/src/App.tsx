@@ -1,8 +1,34 @@
 import Header from "./component/Header";
 import Body from "./component/Body";
 import Report from "./component/Report";
+import ReportHeader from "./component/ReportHeader";
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+
+function AppContent({ qid, setQid }: { qid: string | undefined, setQid: (id: string) => void }) {
+  const location = useLocation();
+  
+  return (
+    <>
+      {location.pathname === '/report' ? <ReportHeader /> : <Header setQid={setQid} />}
+      <Routes>
+        <Route path="/" element={
+          qid ? (
+            <Body qid={qid}/>
+          ) : (
+            <div className="max-w-6xl mx-auto px-4 py-12 text-center">
+              <div className="bg-white rounded-lg shadow-md p-12">
+                <p className="text-gray-500 text-lg">📝 Create your first queue to get started!</p>
+                <p className="text-gray-400 text-sm mt-2">Use the "➕ New Queue" button above.</p>
+              </div>
+            </div>
+          )
+        } />
+        <Route path="/report" element={<Report />} />
+      </Routes>
+    </>
+  );
+}
 
 function App() {
   const [qid, setQid] = useState<string>();
@@ -14,22 +40,7 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
-        <Header setQid={setQid}/>
-        <Routes>
-          <Route path="/" element={
-            qid ? (
-              <Body qid={qid}/>
-            ) : (
-              <div className="max-w-6xl mx-auto px-4 py-12 text-center">
-                <div className="bg-white rounded-lg shadow-md p-12">
-                  <p className="text-gray-500 text-lg">📝 Create your first queue to get started!</p>
-                  <p className="text-gray-400 text-sm mt-2">Use the "➕ New Queue" button above.</p>
-                </div>
-              </div>
-            )
-          } />
-          <Route path="/report" element={<Report />} />
-        </Routes>
+        <AppContent qid={qid} setQid={setQid} />
       </div>
     </Router>
   );
