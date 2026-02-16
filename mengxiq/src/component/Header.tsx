@@ -65,20 +65,6 @@ function Header(
 
         {/* Queue Tabs */}
         <div className="flex items-center gap-2 py-3 overflow-x-auto">
-          {queues.map((queue) => (
-            <button
-              key={queue.id}
-              onClick={() => handleQueueSwitch(queue.id)}
-              className={`px-4 py-2 rounded-t-lg font-medium transition-all duration-150 whitespace-nowrap ${
-                curDisplayQueueId === queue.id
-                  ? 'bg-blue-500 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {queue.name}
-            </button>
-          ))}
-          
           {/* Create Queue Button */}
           {!showCreateForm ? (
             <button
@@ -115,6 +101,20 @@ function Header(
               </button>
             </div>
           )}
+          
+          {queues.map((queue) => (
+            <button
+              key={queue.id}
+              onClick={() => handleQueueSwitch(queue.id)}
+              className={`px-4 py-2 rounded-t-lg font-medium transition-all duration-150 whitespace-nowrap ${
+                curDisplayQueueId === queue.id
+                  ? 'bg-blue-500 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {queue.name}
+            </button>
+          ))}
         </div>
       </div>
     </div>
