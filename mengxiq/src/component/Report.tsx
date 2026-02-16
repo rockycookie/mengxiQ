@@ -5,6 +5,7 @@ function Report(): JSX.Element {
   const [report, setReport] = useState<ReportType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'all' | 'recent'>('all');
 
   useEffect(() => {
     loadReport();
@@ -39,6 +40,45 @@ function Report(): JSX.Element {
     const day = timestamp % 100;
     return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   }
+
+  function getLastWorkDayTimestamp(): number {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    
+    // If today is Monday (1), go back to Thursday (4 days ago) as I do not do report analysis on Friday nor weekend
+    // Otherwise, go back 1 day (yesterday)
+    const daysToSubtract = dayOfWeek === 1 ? 4 : 1;
+    
+    const lastWorkDay = new Date(today);
+    lastWorkDay.setDate(today.getDate() - daysToSubtract);
+    
+    return lastWorkDay.getFullYear() * 10000 + 
+           (lastWorkDay.getMonth() + 1) * 100 + 
+           lastWorkDay.getDate();
+  }
+
+  function getTodayTimestamp(): number {
+    const today = new Date();
+    return today.getFullYear() * 10000 + 
+           (today.getMonth() + 1) * 100 + 
+           today.getDate();
+  }
+
+  function getFilteredItems(): ReportItem[] {
+    if (!report || !report.items) return [];
+    
+    if (activeTab === 'recent') {
+      const lastWorkDay = getLastWorkDayTimestamp();
+      const today = getTodayTimestamp();
+      return report.items.filter(item => 
+        item.reportedAt >= lastWorkDay && item.reportedAt <= today
+      );
+    }
+    
+    return report.items;
+  }
+
+  const filteredItems = getFilteredItems();
 
   if (loading) {
     return (
@@ -93,9 +133,40 @@ function Report(): JSX.Element {
             <p className="text-blue-100 mt-2">Total Items: {report.items.length}</p>
           </div>
 
+          {/* Tabs */}
+          <div className="border-b border-gray-200">
+            <div className="flex gap-2 px-6">
+                <button
+                    onClick={() => setActiveTab('recent')}
+                    className={`px-4 py-3 font-medium text-sm transition-all duration-150 border-b-2 ${
+                    activeTab === 'recent'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-600 hover:text-gray-800'
+                    }`}
+                >
+                    Since last workday ({filteredItems.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('all')}
+                className={`px-4 py-3 font-medium text-sm transition-all duration-150 border-b-2 ${
+                  activeTab === 'all'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                All Items ({report.items.length})
+              </button>
+            </div>
+          </div>
+
           {/* Report Items */}
-          <div className="divide-y divide-gray-200">
-            {report.items.map((item: ReportItem, index: number) => (
+          {filteredItems.length === 0 ? (
+            <div className="p-12 text-center">
+              <p className="text-gray-500 text-lg">No items found for this filter.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-200">
+              {filteredItems.map((item: ReportItem, index: number) => (
               <div key={index} className="p-6 hover:bg-gray-50 transition-colors duration-150">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
@@ -146,6 +217,7 @@ function Report(): JSX.Element {
               </div>
             ))}
           </div>
+          )}
         </div>
       </div>
     </div>
