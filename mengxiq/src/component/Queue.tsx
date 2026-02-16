@@ -1,6 +1,5 @@
 import QueueItem from "./QueueItem";
 import { useState, useEffect } from 'react';
-import { TextInput } from 'react-native';
 import { v4 as uuidv4 } from 'uuid';
 import { priorityLevelMap, priorityLevelMapKeys } from "../model/Priority"
 import { addItemDb, deleteItemDb, getQueueDb } from "../db/JsonServer";
@@ -15,6 +14,7 @@ function Queue(
   const [curLink, setCurLink] = useState("");
   const [curPriorityId, setCurPriorityId] = useState("select_priority");
   const [qname, setQname] = useState<string>("");
+  const [showForm, setShowForm] = useState(true);
 
   const sortAlg = (a: ToDoItem, b: ToDoItem) => {
     let cmp = priorityLevelMap.get(b.priorityId)!.rank - priorityLevelMap.get(a.priorityId)!.rank;
@@ -58,6 +58,16 @@ function Queue(
   }, [props.qid]);
 
   function handleAddItem() {
+    if (!curDescription.trim()) {
+      alert("Please enter a description");
+      return;
+    }
+    
+    if (curPriorityId === "select_priority") {
+      alert("Please select a priority");
+      return;
+    }
+
     const newItems = items.slice();
     const newItem = new ToDoItem(
       curDescription,
@@ -71,6 +81,11 @@ function Queue(
 
     setItems(newItems);
     addItemDb(props.qid, newItem);
+    
+    // Reset form
+    setCurDescription("");
+    setCurLink("");
+    setCurPriorityId("select_priority");
   }
 
   function deleteItem(itemId: string) {
@@ -108,56 +123,124 @@ function Queue(
     deleteItemDb(props.qid, itemId);
   }
 
+  // Get priority button styling
+  const getPriorityButtonClass = (pid: string) => {
+    if (curPriorityId === pid) {
+      const activeClasses: { [key: string]: string } = {
+        'do_it_now': 'bg-red-500 text-white border-red-600',
+        'important_doable': 'bg-orange-500 text-white border-orange-600',
+        'low_hanging_fruit': 'bg-yellow-500 text-white border-yellow-600',
+        'moon_shooting': 'bg-blue-500 text-white border-blue-600',
+      };
+      return activeClasses[pid] || '';
+    }
+    return 'bg-white text-gray-700 border-gray-300 hover:border-gray-400';
+  };
+
+  // Get item count by priority
+  const getItemCountByPriority = (pid: string) => {
+    return items.filter(item => item.priorityId === pid).length;
+  };
+
   return (
-    <div>
-      <table>
-        <tr>
-          <td>
-            Link: <input onChange={(e) => setCurLink(e.target.value)} style={{ width: '500px' }} />
-          </td>
-          <td>
-            <select onChangeCapture={(e: React.ChangeEvent<HTMLSelectElement>) => setCurPriorityId(e.target.value)}>
-              {
-                priorityLevelMapKeys.map(function (id) {
-                  return <option value={id} key={id}>{priorityLevelMap.get(id)!.display}</option>
-                })
-              }
-            </select>
-          </td>
-        </tr>
-      </table>
-      <div style={{ width: '90%' }}>
-        <span style={{ width: '10%' }}>Description</span>
-        <TextInput
-          multiline={true}
-          numberOfLines={5}
-          style={{ width: '90%' }}
-          onChangeText={text => setCurDescription(text)}
-          placeholder="Enter item description"
-        />
-      </div>
-      <div style={{ width: '90%' }}>
-        <button
-          style={{ width: '65%' }}
-          onClick={handleAddItem}
-        >
-          Add item
-        </button>
-        <button style={{ width: '35%' }}>Hide</button>
+    <div className="max-w-6xl mx-auto px-4 py-6">
+      {/* Quick Add Form */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-gray-800">Quick Capture</h2>
+          <button 
+            onClick={() => setShowForm(!showForm)}
+            className="text-sm text-gray-600 hover:text-gray-800"
+          >
+            {showForm ? '▼ Hide' : '▶ Show'}
+          </button>
+        </div>
+        
+        {showForm && (
+          <div className="space-y-4">
+            {/* Priority Selection - Quick Buttons */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {priorityLevelMapKeys.filter(id => id !== 'select_priority').map((id) => (
+                  <button
+                    key={id}
+                    onClick={() => setCurPriorityId(id)}
+                    className={`px-4 py-3 rounded-md border-2 font-medium transition-all duration-150 ${getPriorityButtonClass(id)}`}
+                  >
+                    {priorityLevelMap.get(id)!.display}
+                    {getItemCountByPriority(id) > 0 && (
+                      <span className="ml-2 text-xs">({getItemCountByPriority(id)})</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+              <textarea
+                value={curDescription}
+                onChange={e => setCurDescription(e.target.value)}
+                placeholder="Enter item description..."
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                rows={4}
+              />
+            </div>
+
+            {/* Link */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Reference Link (optional)</label>
+              <input
+                type="text"
+                value={curLink}
+                onChange={e => setCurLink(e.target.value)}
+                placeholder="https://..."
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={handleAddItem}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium transition-colors duration-150 shadow-sm"
+              >
+                ➕ Add Item
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      <table style={{ 'marginTop': '15px' }}>
-        {items.map(function (d) {
-          return <QueueItem
-            key={d.id}
-            description={d.description}
-            link={d.link}
-            priorityId={d.priorityId}
-            deleteFuncion={() => deleteItem(d.id)}
-            reportFuncion={() => reportItem(d.id)}
-          />
-        })}
-      </table>
+      {/* Items Summary */}
+      <div className="mb-4 flex justify-between items-center">
+        <h3 className="text-lg font-semibold text-gray-800">
+          Items ({items.length})
+        </h3>
+      </div>
+
+      {/* Items List */}
+      {items.length === 0 ? (
+        <div className="bg-white rounded-lg shadow-md p-12 text-center">
+          <p className="text-gray-500 text-lg">🎉 Queue is empty!</p>
+          <p className="text-gray-400 text-sm mt-2">Add your first item above to get started.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {items.map(function (d) {
+            return <QueueItem
+              key={d.id}
+              description={d.description}
+              link={d.link}
+              priorityId={d.priorityId}
+              deleteFuncion={() => deleteItem(d.id)}
+              reportFuncion={() => reportItem(d.id)}
+            />
+          })}
+        </div>
+      )}
     </div>
   );
 }
