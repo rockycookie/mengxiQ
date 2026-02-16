@@ -5,7 +5,7 @@ function Report(): JSX.Element {
   const [report, setReport] = useState<ReportType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'all' | 'recent'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'recent'>('recent');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
