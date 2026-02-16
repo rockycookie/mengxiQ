@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { createQueueDb, listQueuesDb } from '../db/JsonServer';
 import { PriorityQueue } from '../model/PriorityQueue';
 
@@ -8,6 +9,8 @@ function Header(
   }
 ): JSX.Element {
 
+  const navigate = useNavigate();
+  const location = useLocation();
   const [curCreateQueueName, setCurCreateQueueName] = useState("");
   const [queues, setQueues] = useState<PriorityQueue[]>([]);
   const [curDisplayQueueId, setCurDisplayQueueId] = useState<string | null>(null);
@@ -52,6 +55,7 @@ function Header(
 
   function handleQueueSwitch(qid: string) {
     setCurDisplayQueueId(qid);
+    navigate('/');
   }
 
   return (
@@ -59,7 +63,12 @@ function Header(
       <div className="max-w-6xl mx-auto px-4">
         {/* App Title */}
         <div className="py-4 border-b border-gray-200">
-          <h1 className="text-2xl font-bold text-gray-800">📋 MengxiQ</h1>
+          <h1 
+            className="text-2xl font-bold text-gray-800 cursor-pointer hover:text-blue-600 transition-colors duration-150"
+            onClick={() => navigate('/')}
+          >
+            📋 MengxiQ
+          </h1>
           <p className="text-sm text-gray-600 mt-1">Prioritize, record, and forget quickly</p>
         </div>
 
@@ -115,6 +124,20 @@ function Header(
               {queue.name}
             </button>
           ))}
+
+          {/* Report Navigation Button */}
+          <div className="flex-1 flex justify-end">
+            <button
+              onClick={() => navigate('/report')}
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-150 whitespace-nowrap ${
+                location.pathname === '/report'
+                  ? 'bg-purple-500 text-white shadow-md'
+                  : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+              }`}
+            >
+              📊 Reports
+            </button>
+          </div>
         </div>
       </div>
     </div>
