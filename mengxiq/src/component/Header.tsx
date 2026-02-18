@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createQueueDb, listQueuesDb } from '../db/JsonServer';
+import { createQueueDb, listQueuesDb, softDeleteQueueDb, listDeletedQueuesDb } from '../db/JsonServer';
 import { PriorityQueue } from '../model/PriorityQueue';
 
 function Header(
@@ -12,6 +12,7 @@ function Header(
   const navigate = useNavigate();
   const [curCreateQueueName, setCurCreateQueueName] = useState("");
   const [queues, setQueues] = useState<PriorityQueue[]>([]);
+  const [deletedQueues, setDeletedQueues] = useState<PriorityQueue[]>([]);
   const [curDisplayQueueId, setCurDisplayQueueId] = useState<string | null>(null);
   const [triggerRerender, setTriggerRerender] = useState(0);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -27,6 +28,10 @@ function Header(
           props.setQid(curDisplayQueueId);
         }
       }
+    });
+    
+    listDeletedQueuesDb().then(result => {
+      setDeletedQueues(result);
     });
   }, [curDisplayQueueId, triggerRerender]);
 
@@ -54,6 +59,26 @@ function Header(
 
   function handleQueueSwitch(qid: string) {
     setCurDisplayQueueId(qid);
+  }
+
+  function handleDeleteQueue(qid: string, qname: string, event: React.MouseEvent) {
+    event.stopPropagation();
+    if (window.confirm(`Are you sure you want to delete "${qname}"? You can restore it later from deleted queues.`)) {
+      softDeleteQueueDb(qid).then(() => {
+        // If the deleted queue was selected, switch to the first available queue
+        if (curDisplayQueueId === qid) {
+          listQueuesDb().then(result => {
+            if (result.length > 0) {
+              setCurDisplayQueueId(result[0].id);
+            } else {
+              setCurDisplayQueueId(null);
+              props.setQid("");
+            }
+          });
+        }
+        setTriggerRerender(triggerRerender + 1);
+      });
+    }
   }
 
   return (
@@ -117,22 +142,45 @@ function Header(
             >
               📊 Reports
             </button>
+
+            {/* Deleted Queues Button */}
+            {deletedQueues.length > 0 && (
+              <button
+                onClick={() => navigate('/deleted')}
+                className="px-4 py-2 rounded-lg font-medium bg-orange-100 text-orange-700 hover:bg-orange-200 transition-all duration-150 whitespace-nowrap"
+              >
+                🗑️ Deleted ({deletedQueues.length})
+              </button>
+            )}
           </div>
 
           {/* Queue Tabs Row */}
           <div className="flex items-center gap-2 overflow-x-auto mb-2">
             {queues.map((queue) => (
-              <button
+              <div
                 key={queue.id}
-                onClick={() => handleQueueSwitch(queue.id)}
-                className={`px-4 py-2 rounded-t-lg font-medium transition-all duration-150 whitespace-nowrap ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-t-lg font-medium transition-all duration-150 ${
                   curDisplayQueueId === queue.id
                     ? 'bg-blue-500 text-white shadow-md'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {queue.name}
-              </button>
+                <button
+                  onClick={() => handleQueueSwitch(queue.id)}
+                  className="whitespace-nowrap"
+                >
+                  {queue.name}
+                </button>
+                <button
+                  onClick={(e) => handleDeleteQueue(queue.id, queue.name, e)}
+                  className={`ml-2 text-xs hover:opacity-70 transition-opacity ${
+                    curDisplayQueueId === queue.id ? 'text-white' : 'text-red-600'
+                  }`}
+                  title="Delete queue"
+                >
+                  ✕
+                </button>
+              </div>
             ))}
           </div>
         </div>
