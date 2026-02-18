@@ -2,15 +2,23 @@ import Header from "./component/Header";
 import Body from "./component/Body";
 import Report from "./component/Report";
 import ReportHeader from "./component/ReportHeader";
+import DeletedQueues from "./component/DeletedQueues";
+import DeletedQueuesHeader from "./component/DeletedQueuesHeader";
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 
 function AppContent({ qid, setQid }: { qid: string | undefined, setQid: (id: string) => void }) {
   const location = useLocation();
   
+  const getHeader = () => {
+    if (location.pathname === '/report') return <ReportHeader />;
+    if (location.pathname === '/deleted') return <DeletedQueuesHeader />;
+    return <Header setQid={setQid} />;
+  };
+  
   return (
     <>
-      {location.pathname === '/report' ? <ReportHeader /> : <Header setQid={setQid} />}
+      {getHeader()}
       <Routes>
         <Route path="/" element={
           qid ? (
@@ -25,6 +33,7 @@ function AppContent({ qid, setQid }: { qid: string | undefined, setQid: (id: str
           )
         } />
         <Route path="/report" element={<Report />} />
+        <Route path="/deleted" element={<DeletedQueues />} />
       </Routes>
     </>
   );
