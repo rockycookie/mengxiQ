@@ -5,10 +5,13 @@ const db_url = "http://localhost:8002"
 
 export async function listQueuesDb(includeDeleted: boolean = false) {
   const queues = await (await fetch(db_url + "/queues/")).json();
-  if (includeDeleted) {
-    return queues;
-  }
-  return queues.filter((q: any) => !q.isDeleted);
+  const filteredQueues = includeDeleted ? queues : queues.filter((q: any) => !q.isDeleted);
+  // Sort by displayOrder (or by creation order if displayOrder is missing)
+  return filteredQueues.sort((a: any, b: any) => {
+    const orderA = a.displayOrder !== undefined ? a.displayOrder : 999999;
+    const orderB = b.displayOrder !== undefined ? b.displayOrder : 999999;
+    return orderA - orderB;
+  });
 }
 
 export async function listDeletedQueuesDb() {
@@ -17,12 +20,19 @@ export async function listDeletedQueuesDb() {
 }
 
 export async function createQueueDb(qname: string): Promise<any> {
+  // Get current queues to determine the next displayOrder
+  const queues = await listQueuesDb(true);
+  const maxOrder = queues.length > 0 
+    ? Math.max(...queues.map((q: any) => q.displayOrder !== undefined ? q.displayOrder : 0))
+    : -1;
+  
   const newQueue = {
     id: uuidv4(),
     name: qname,
     items: [],
     isDeleted: false,
-    deletedAt: undefined
+    deletedAt: undefined,
+    displayOrder: maxOrder + 1
   };
   await fetch(
     db_url + "/queues/",
@@ -142,4 +152,25 @@ export async function permanentDeleteQueueDb(qid: string) {
       headers: {"Content-Type": "application/json"},
     }
   )
+}
+
+export async function updateQueueOrderDb(queueIds: string[]) {
+  // Update displayOrder for each queue based on the array index
+  const queues = await listQueuesDb(true);
+  const updates = queueIds.map(async (qid, index) => {
+    const queue = queues.find((q: any) => q.id === qid);
+    if (queue) {
+      queue.displayOrder = index;
+      await fetch(
+        db_url + "/queues/" + qid,
+        {
+          method: "PUT",
+          body: JSON.stringify(queue),
+          headers: {"Content-Type": "application/json"},
+        }
+      );
+    }
+  });
+  
+  await Promise.all(updates);
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createQueueDb, listQueuesDb, softDeleteQueueDb, listDeletedQueuesDb } from '../db/JsonServer';
+import { createQueueDb, listQueuesDb, softDeleteQueueDb, listDeletedQueuesDb, updateQueueOrderDb } from '../db/JsonServer';
 import { PriorityQueue } from '../model/PriorityQueue';
 
 function Header(
@@ -16,6 +16,8 @@ function Header(
   const [curDisplayQueueId, setCurDisplayQueueId] = useState<string | null>(null);
   const [triggerRerender, setTriggerRerender] = useState(0);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [draggedQueueId, setDraggedQueueId] = useState<string | null>(null);
+  const [dragOverQueueId, setDragOverQueueId] = useState<string | null>(null);
 
   useEffect(() => {
     listQueuesDb().then(result => {
@@ -79,6 +81,73 @@ function Header(
         setTriggerRerender(triggerRerender + 1);
       });
     }
+  }
+
+  function handleDragStart(qid: string, event: React.DragEvent) {
+    setDraggedQueueId(qid);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/html', event.currentTarget.innerHTML);
+    // Add a slight opacity to the dragged element
+    (event.currentTarget as HTMLElement).style.opacity = '0.4';
+  }
+
+  function handleDragEnd(event: React.DragEvent) {
+    (event.currentTarget as HTMLElement).style.opacity = '1';
+    setDraggedQueueId(null);
+    setDragOverQueueId(null);
+  }
+
+  function handleDragOver(event: React.DragEvent) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  }
+
+  function handleDragEnter(qid: string, event: React.DragEvent) {
+    event.preventDefault();
+    if (draggedQueueId && draggedQueueId !== qid) {
+      setDragOverQueueId(qid);
+    }
+  }
+
+  function handleDragLeave(event: React.DragEvent) {
+    // Only clear if we're actually leaving the element
+    // The Problem: onDragLeave has a quirk - it fires not just when leaving the parent element, but also when entering child elements (like the button inside the tab div). This causes flickering.
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    const x = event.clientX;
+    const y = event.clientY;
+    
+    if (x < rect.left || x >= rect.right || y < rect.top || y >= rect.bottom) {
+      setDragOverQueueId(null);
+    }
+  }
+
+  function handleDrop(targetQid: string, event: React.DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    if (!draggedQueueId || draggedQueueId === targetQid) {
+      setDragOverQueueId(null);
+      return;
+    }
+
+    // Reorder the queues array
+    const draggedIndex = queues.findIndex(q => q.id === draggedQueueId);
+    const targetIndex = queues.findIndex(q => q.id === targetQid);
+    
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+      const newQueues = [...queues];
+      const [removed] = newQueues.splice(draggedIndex, 1);
+      newQueues.splice(targetIndex, 0, removed);
+      
+      setQueues(newQueues);
+      
+      // Update the order in the database
+      const queueIds = newQueues.map(q => q.id);
+      updateQueueOrderDb(queueIds);
+    }
+    
+    setDragOverQueueId(null);
+    setDraggedQueueId(null);
   }
 
   return (
@@ -159,10 +228,21 @@ function Header(
             {queues.map((queue) => (
               <div
                 key={queue.id}
-                className={`flex items-center gap-2 px-4 py-2 rounded-t-lg font-medium transition-all duration-150 ${
+                draggable
+                onDragStart={(e) => handleDragStart(queue.id, e)}
+                onDragEnd={handleDragEnd}
+                onDragOver={handleDragOver}
+                onDragEnter={(e) => handleDragEnter(queue.id, e)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(queue.id, e)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-t-lg font-medium transition-all duration-150 cursor-move ${
                   curDisplayQueueId === queue.id
                     ? 'bg-blue-500 text-white shadow-md'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                } ${
+                  dragOverQueueId === queue.id && draggedQueueId !== queue.id
+                    ? 'border-2 border-blue-400 border-dashed'
+                    : ''
                 }`}
               >
                 <button
