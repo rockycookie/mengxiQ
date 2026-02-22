@@ -1,17 +1,22 @@
 import { useState, useEffect } from 'react';
 import { Report as ReportType, ReportItem, getReportDb, current_report_id } from '../db/ReportJsonServer';
+import { listQueuesDb } from '../db/JsonServer';
 import { priorityLevelMap } from '../model/Priority';
+import { PriorityQueue } from '../model/PriorityQueue';
 
 function Report(): JSX.Element {
   const [report, setReport] = useState<ReportType | null>(null);
+  const [queues, setQueues] = useState<PriorityQueue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'recent'>('recent');
+  const [selectedQueues, setSelectedQueues] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   useEffect(() => {
     loadReport();
+    loadQueues();
   }, []);
 
   async function loadReport() {
@@ -25,6 +30,15 @@ function Report(): JSX.Element {
       console.error('Error loading report:', err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadQueues() {
+    try {
+      const queuesData = await listQueuesDb();
+      setQueues(queuesData);
+    } catch (err) {
+      console.error('Error loading queues:', err);
     }
   }
 
@@ -72,28 +86,72 @@ function Report(): JSX.Element {
     return priority ? priority.rank : 0;
   }
 
-  function getFilteredItems(): ReportItem[] {
+  function getUniqueQueues(): string[] {
     if (!report || !report.items) return [];
     
+    // Get date-filtered items to check which queues have items
+    const itemsToCheck = getDateFilteredItems();
+    
+    // Get unique queue names from date-filtered items (only queues with items)
+    const reportQueueNames = new Set(itemsToCheck.map(item => item.qname));
+    const activeQueueNames = new Set(queues.map(q => q.name));
+    
+    // First, add queues that exist in the queues list (in displayOrder)
+    const orderedQueues = queues
+      .filter(q => reportQueueNames.has(q.name))
+      .map(q => q.name);
+    
+    // Then, add any queue names from report that don't exist in queues list (likely deleted)
+    const deletedQueues = Array.from(reportQueueNames)
+      .filter(qname => !activeQueueNames.has(qname))
+      .sort();
+    
+    return [...orderedQueues, ...deletedQueues];
+  }
+
+  function getDateFilteredItems(): ReportItem[] {
+    if (!report || !report.items) return [];
+    
+    // Apply only date filter for recent tab
     if (activeTab === 'recent') {
       const lastWorkDay = getLastWorkDayTimestamp();
       const today = getTodayTimestamp();
-      const filtered = report.items.filter(item => 
+      return report.items.filter(item => 
         item.reportedAt >= lastWorkDay && item.reportedAt <= today
       );
-      
-      // Sort by priority (high to low), then by creation time (old to new)
-      return filtered.sort((a, b) => {
-        const priorityDiff = getPriorityRank(b.priorityId) - getPriorityRank(a.priorityId);
-        if (priorityDiff !== 0) {
-          return priorityDiff;
-        }
-        // When priority is the same, sort by creation time (old to new)
-        return a.createdAt - b.createdAt;
-      });
     }
     
     return report.items;
+  }
+
+  function getFilteredItems(): ReportItem[] {
+    if (!report || !report.items) return [];
+    
+    let filtered = report.items;
+    
+    // Find items by tab (recent vs all)
+    if (activeTab === 'recent') {
+      const lastWorkDay = getLastWorkDayTimestamp();
+      const today = getTodayTimestamp();
+      filtered = filtered.filter(item => 
+        item.reportedAt >= lastWorkDay && item.reportedAt <= today
+      );
+    }
+    
+    // Apply queue filter
+    if (selectedQueues.size > 0) {
+      filtered = filtered.filter(item => selectedQueues.has(item.qname));
+    }
+    
+    // Sort by priority (high to low), then by creation time (old to new)
+    return filtered.sort((a, b) => {
+      const priorityDiff = getPriorityRank(b.priorityId) - getPriorityRank(a.priorityId);
+      if (priorityDiff !== 0) {
+        return priorityDiff;
+      }
+      // When priority is the same, sort by creation time (old to new)
+      return a.createdAt - b.createdAt;
+    });
   }
 
   function getPaginatedItems(): ReportItem[] {
@@ -110,6 +168,30 @@ function Report(): JSX.Element {
     setCurrentPage(1); // Reset to first page when switching tabs
   }
 
+  function toggleQueue(queueName: string) {
+    const newSelection = new Set(selectedQueues);
+    if (newSelection.has(queueName)) {
+      newSelection.delete(queueName);
+    } else {
+      newSelection.add(queueName);
+    }
+    setSelectedQueues(newSelection);
+    setCurrentPage(1); // Reset to first page when changing queue
+  }
+
+  function toggleAllQueues() {
+    if (selectedQueues.size === uniqueQueues.length) {
+      // If all are selected, deselect all
+      setSelectedQueues(new Set());
+    } else {
+      // Otherwise, select all
+      setSelectedQueues(new Set(uniqueQueues));
+    }
+    setCurrentPage(1);
+  }
+
+  const uniqueQueues = getUniqueQueues();
+  const dateFilteredItems = getDateFilteredItems();
   const filteredItems = getFilteredItems();
   const paginatedItems = getPaginatedItems();
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
@@ -202,6 +284,49 @@ function Report(): JSX.Element {
               </button>
             </div>
           </div>
+
+          {/* Queue Filters */}
+          {uniqueQueues.length > 0 && (
+            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+              <div className="mb-2">
+                <label className="text-sm font-medium text-gray-700">
+                  📋 Filter by Queue:
+                </label>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {/* All Queues Toggle */}
+                <button
+                  onClick={toggleAllQueues}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${
+                    selectedQueues.size === 0 || selectedQueues.size === uniqueQueues.length
+                      ? 'bg-blue-500 text-white shadow-md'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {(selectedQueues.size === 0 || selectedQueues.size === uniqueQueues.length) ? '✓ ' : ''}All Queues ({dateFilteredItems.length})
+                </button>
+                
+                {/* Individual Queue Cards */}
+                {uniqueQueues.map((queue) => {
+                  const count = dateFilteredItems.filter(item => item.qname === queue).length;
+                  const isSelected = selectedQueues.size > 0 && selectedQueues.has(queue);
+                  return (
+                    <button
+                      key={queue}
+                      onClick={() => toggleQueue(queue)}
+                      className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${
+                        isSelected
+                          ? 'bg-blue-500 text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {isSelected ? '✓ ' : ''}{queue} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Report Items */}
           {paginatedItems.length === 0 ? (
