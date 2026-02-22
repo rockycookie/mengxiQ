@@ -216,7 +216,7 @@ function Report(): JSX.Element {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     {/* Description */}
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2 whitespace-pre-wrap break-words">
                       {item.description}
                     </h3>
 
