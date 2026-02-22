@@ -34,5 +34,5 @@ npx json-server --watch ./json_server/real_db/report2024.json --port 8001
 ```
 cd mengxiq
 npm run build
-npx serve -s build -l 3019
+npx http-server build -p 3019 -a localhost
 ```
