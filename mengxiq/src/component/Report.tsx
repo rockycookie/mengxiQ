@@ -63,8 +63,24 @@ function Report(): JSX.Element {
     const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
     
     // If today is Monday (1), go back to Thursday (4 days ago) as I do not do report analysis on Friday nor weekend
+    // If today is Sunday (0), go back 3 days to Thursday
+    // If today is Saturday (6), go back 2 days to Thursday
     // Otherwise, go back 1 day (yesterday)
-    const daysToSubtract = dayOfWeek === 1 ? 4 : 1;
+    let daysToSubtract: number;
+    switch (dayOfWeek) {
+      case 1: // Monday
+        daysToSubtract = 4;
+        break;
+      case 0: // Sunday
+        daysToSubtract = 3;
+        break;
+      case 6: // Saturday
+        daysToSubtract = 2;
+        break;
+      default: // Tuesday-Friday
+        daysToSubtract = 1;
+        break;
+    }
     
     const lastWorkDay = new Date(today);
     lastWorkDay.setDate(today.getDate() - daysToSubtract);
