@@ -129,7 +129,7 @@ function Report(): JSX.Element {
     
     let filtered = report.items;
     
-    // Apply date filter for recent tab
+    // Find items by tab (recent vs all)
     if (activeTab === 'recent') {
       const lastWorkDay = getLastWorkDayTimestamp();
       const today = getTodayTimestamp();
@@ -285,7 +285,7 @@ function Report(): JSX.Element {
             </div>
           </div>
 
-          {/* Queue Filter */}
+          {/* Queue Filters */}
           {uniqueQueues.length > 0 && (
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
               <div className="mb-2">
