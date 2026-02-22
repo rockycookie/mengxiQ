@@ -22,3 +22,6 @@ yarn-error.log*
 
 # real db data should not push to remote
 json_server/real_db/*.json
+
+# ignore .github folder for now
+.github
