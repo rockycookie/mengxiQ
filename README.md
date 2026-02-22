@@ -1,9 +1,9 @@
 # mengxiQ
-This is a task management tool for multiple item queues (todo list) with customized priority definition. The tool is to help users to quickly capture and record any new idea/suggestion/concern when they are focusing on their primary task which could be totally irrelevant to the items they add to the queues.
+MengxiQ is a to-do list. Users organize to-do items across multiple task queues, prioritize/catogrize them into 4 priority groups, then "report" the completed items to a separate reporting view (so that engineers/developers know what to say in the next standup meeting lol).
 
-The principle is to **prioritize, record and forget quickly**, which minimizes the interruption to the primary task. And the user can come back later with a good sense of the items.
+The principle is to **prioritize, record and forget quickly**, which minimizes the interruption to the currently in-progress task. And the user can come back later with a good sense of the items.
 
-Note this tool is not designed to replace formal feature tracking software systems like Jira. It is designed to be a temporary cache, where users come back and clean the queues frequently (once they have a break from their primary task). By cleaning the queue, users do not have to finish the action, they can put those into formal feature tracking system with more data for example.
+The UI is done by React TypeScript. NodeJS JSON Server is used as a REST backend, which is more than enough for the currently single-user scenario~
 
 ## How to run
 ### 0. Setup
