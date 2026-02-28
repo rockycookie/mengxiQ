@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { priorityLevelMap, priorityLevelMapKeys } from "../model/Priority"
+import { priorityLevelMap, priorityLevelMapKeys } from "../model/Priority";
+import { getHostname } from '../utils';
 
 function QueueItem(
   props: {
@@ -136,7 +137,7 @@ function QueueItem(
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-800 text-sm inline-flex items-center gap-1 hover:underline"
             >
-              🔗 Reference Link
+              🔗 Ref Link: {getHostname(props.link)}
             </a>
           )}
         </div>

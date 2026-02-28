@@ -3,6 +3,7 @@ import { Report as ReportType, ReportItem, getReportDb, current_report_id } from
 import { listQueuesDb } from '../db/JsonServer';
 import { priorityLevelMap } from '../model/Priority';
 import { PriorityQueue } from '../model/PriorityQueue';
+import { getHostname } from '../utils';
 
 function Report(): JSX.Element {
   const [report, setReport] = useState<ReportType | null>(null);
@@ -377,7 +378,7 @@ function Report(): JSX.Element {
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 underline text-sm break-all"
                         >
-                          🔗 {item.link}
+                          🔗 Ref Link: {getHostname(item.link)}
                         </a>
                       </div>
                     )}
