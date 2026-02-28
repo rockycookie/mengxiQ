@@ -10,7 +10,7 @@ function Report(): JSX.Element {
   const [queues, setQueues] = useState<PriorityQueue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'all' | 'recent'>('recent');
+  const [activeTab, setActiveTab] = useState<'all' | 'recent' | 'today'>('recent');
   const [selectedQueues, setSelectedQueues] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -138,6 +138,12 @@ function Report(): JSX.Element {
       );
     }
     
+    // Apply date filter for today tab
+    if (activeTab === 'today') {
+      const today = getTodayTimestamp();
+      return report.items.filter(item => item.reportedAt === today);
+    }
+    
     return report.items;
   }
 
@@ -146,13 +152,16 @@ function Report(): JSX.Element {
     
     let filtered = report.items;
     
-    // Find items by tab (recent vs all)
+    // Find items by tab (recent vs today vs all)
     if (activeTab === 'recent') {
       const lastWorkDay = getLastWorkDayTimestamp();
       const today = getTodayTimestamp();
       filtered = filtered.filter(item => 
         item.reportedAt >= lastWorkDay && item.reportedAt <= today
       );
+    } else if (activeTab === 'today') {
+      const today = getTodayTimestamp();
+      filtered = filtered.filter(item => item.reportedAt === today);
     }
     
     // Apply queue filter
@@ -180,7 +189,7 @@ function Report(): JSX.Element {
     return filtered.slice(startIndex, endIndex);
   }
 
-  function handleTabChange(tab: 'all' | 'recent') {
+  function handleTabChange(tab: 'all' | 'recent' | 'today') {
     setActiveTab(tab);
     setCurrentPage(1); // Reset to first page when switching tabs
   }
@@ -221,6 +230,13 @@ function Report(): JSX.Element {
     return report.items.filter(item => 
       item.reportedAt >= lastWorkDay && item.reportedAt <= today
     ).length;
+  })();
+  
+  // Calculate today items count for tab display
+  const todayItemsCount = (() => {
+    if (!report || !report.items) return 0;
+    const today = getTodayTimestamp();
+    return report.items.filter(item => item.reportedAt === today).length;
   })();
 
   if (loading) {
@@ -288,6 +304,16 @@ function Report(): JSX.Element {
                     }`}
                 >
                     Since Last Workday ({recentItemsCount})
+              </button>
+              <button
+                onClick={() => handleTabChange('today')}
+                className={`px-4 py-3 font-medium text-sm transition-all duration-150 border-b-2 ${
+                  activeTab === 'today'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                Today ({todayItemsCount})
               </button>
               <button
                 onClick={() => handleTabChange('all')}
