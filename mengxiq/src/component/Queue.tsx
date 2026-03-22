@@ -1,5 +1,5 @@
 import QueueItem from "./QueueItem";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { priorityLevelMap, priorityLevelMapKeys } from "../model/Priority"
 import { addItemDb, deleteItemDb, getQueueDb, updateItemDb } from "../db/JsonServer";
@@ -16,6 +16,7 @@ function Queue(
   const [qname, setQname] = useState<string>("");
   const [showForm, setShowForm] = useState(true);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   const sortAlg = (a: ToDoItem, b: ToDoItem) => {
     let cmp = priorityLevelMap.get(b.priorityId)!.rank - priorityLevelMap.get(a.priorityId)!.rank;
@@ -57,6 +58,17 @@ function Queue(
         }
       });
   }, [props.qid]);
+
+  const autoResizeTextarea = (textarea: HTMLTextAreaElement | null) => {
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
+  };
+
+  useEffect(() => {
+    autoResizeTextarea(descriptionRef.current);
+  }, [curDescription]);
 
   function handleAddItem() {
     if (!curDescription.trim()) {
@@ -202,11 +214,12 @@ function Queue(
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
               <textarea
+                ref={descriptionRef}
                 value={curDescription}
                 onChange={e => setCurDescription(e.target.value)}
                 placeholder="Enter item description..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                rows={4}
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden"
+                rows={8}
               />
             </div>
 

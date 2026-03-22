@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { priorityLevelMap, priorityLevelMapKeys } from "../model/Priority";
 import { getHostname } from '../utils';
@@ -19,6 +19,7 @@ function QueueItem(
   const [editDescription, setEditDescription] = useState(props.description);
   const [editLink, setEditLink] = useState(props.link);
   const [editPriorityId, setEditPriorityId] = useState(props.priorityId);
+  const editDescriptionRef = useRef<HTMLTextAreaElement>(null);
   
   // Get priority styling
   const getPriorityStyle = (priorityId: string) => {
@@ -34,6 +35,19 @@ function QueueItem(
 
   const priorityDisplay = priorityLevelMap.get(props.priorityId)?.display || "Unknown";
   const borderColor = getPriorityStyle(props.priorityId);
+
+  const autoResizeTextarea = (textarea: HTMLTextAreaElement | null) => {
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
+  };
+
+  useEffect(() => {
+    if (props.isEditing) {
+      autoResizeTextarea(editDescriptionRef.current);
+    }
+  }, [editDescription, props.isEditing]);
 
   const handleSave = () => {
     if (!editDescription.trim()) {
@@ -60,9 +74,10 @@ function QueueItem(
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
             <textarea
+              ref={editDescriptionRef}
               value={editDescription}
               onChange={e => setEditDescription(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden"
               rows={4}
             />
           </div>
