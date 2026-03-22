@@ -36,3 +36,62 @@ body {
     @apply bg-gray-100 text-gray-600 border-gray-300;
   }
 }
+
+/* Markdown styling */
+.prose code {
+  @apply bg-gray-200 text-red-600 px-1.5 py-0.5 rounded text-sm font-mono;
+  margin: 0 !important;
+}
+
+.prose code::before,
+.prose code::after {
+  content: none;
+}
+
+.prose pre {
+  @apply bg-gray-200 text-gray-800 p-4 rounded-lg overflow-x-auto;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.prose pre code {
+  @apply bg-transparent text-gray-800 p-0;
+}
+
+.prose ul,
+.prose ol {
+  @apply my-0;
+}
+
+.prose li {
+  @apply my-0;
+}
+
+.prose li > p {
+  @apply my-0;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.prose > :first-child {
+  margin-top: 0 !important;
+}
+
+.prose > :last-child {
+  margin-bottom: 0 !important;
+}
+
+.prose p {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
