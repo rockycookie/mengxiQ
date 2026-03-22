@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Report as ReportType, ReportItem, getReportDb, current_report_id } from '../db/ReportJsonServer';
 import { listQueuesDb } from '../db/JsonServer';
 import { priorityLevelMap } from '../model/Priority';
@@ -384,9 +385,9 @@ function Report(): JSX.Element {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     {/* Description */}
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2 whitespace-pre-wrap break-words">
-                      {item.description}
-                    </h3>
+                    <div className="text-lg font-semibold text-gray-800 mb-2 prose prose-sm max-w-none">
+                      <ReactMarkdown>{item.description}</ReactMarkdown>
+                    </div>
 
                     {/* Queue Info */}
                     <div className="flex items-center gap-2 mb-3">

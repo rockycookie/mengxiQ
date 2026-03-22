@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { priorityLevelMap, priorityLevelMapKeys } from "../model/Priority";
 import { getHostname } from '../utils';
 
@@ -129,7 +130,9 @@ function QueueItem(
     <div className={`bg-white shadow-md rounded-lg p-4 mb-3 border-l-4 ${borderColor.split(' ')[0]} hover:shadow-lg transition-shadow duration-200`}>
       <div className="flex justify-between items-start gap-4">
         <div className="flex-1">
-          <p className="text-gray-800 mb-2 whitespace-pre-wrap break-words">{props.description}</p>
+          <div className="text-gray-800 mb-2 prose prose-sm max-w-none">
+            <ReactMarkdown>{props.description}</ReactMarkdown>
+          </div>
           {props.link && (
             <a 
               href={props.link} 
