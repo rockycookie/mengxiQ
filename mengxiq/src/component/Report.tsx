@@ -385,7 +385,7 @@ function Report(): JSX.Element {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     {/* Description */}
-                    <div className="text-lg font-semibold text-gray-800 mb-2 prose prose-sm max-w-none">
+                    <div className="text-lg font-semibold text-gray-800 mb-2 prose prose-base max-w-none">
                       <ReactMarkdown>{item.description}</ReactMarkdown>
                     </div>
 
