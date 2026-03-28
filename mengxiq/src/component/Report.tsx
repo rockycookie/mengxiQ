@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Report as ReportType, ReportItem, getReportDb, current_report_id } from '../db/ReportJsonServer';
-import { listQueuesDb } from '../db/JsonServer';
+import { Report as ReportType, ReportItem, getReportDb, current_report_id, removeReportItemDb } from '../db/ReportJsonServer';
+import { listQueuesDb, addItemDb, getQueueDb } from '../db/JsonServer';
 import { priorityLevelMap } from '../model/Priority';
 import { PriorityQueue } from '../model/PriorityQueue';
+import { ToDoItem } from '../model/ToDoItem';
 import { getHostname } from '../utils';
 
 function Report(): JSX.Element {
@@ -41,6 +42,40 @@ function Report(): JSX.Element {
       setQueues(queuesData);
     } catch (err) {
       console.error('Error loading queues:', err);
+    }
+  }
+
+  async function undoReportItem(item: ReportItem) {
+    try {
+      // Check if the original queue still exists
+      const queue = await getQueueDb(item.qid);
+      
+      if (!queue) {
+        alert(`Queue "${item.qname}" no longer exists. Cannot undo this item.`);
+        return;
+      }
+      
+      // Convert ReportItem back to ToDoItem
+      const todoItem = new ToDoItem(
+        item.description,
+        item.link,
+        `undo-${Date.now()}-${Math.random()}`, // Generate new ID for the restored item
+        item.createdAt,
+        item.priorityId
+      );
+      
+      // Add back to the original queue
+      await addItemDb(item.qid, todoItem);
+      
+      // Remove from report
+      await removeReportItemDb(current_report_id, item);
+      
+      // Reload the report to reflect changes
+      await loadReport();
+      
+    } catch (err) {
+      console.error('Error undoing report item:', err);
+      alert('Failed to undo report item. Please try again.');
     }
   }
 
@@ -421,11 +456,18 @@ function Report(): JSX.Element {
                     </div>
                   </div>
 
-                  {/* Priority Badge */}
-                  <div className="flex-shrink-0">
+                  {/* Priority Badge and Undo Button */}
+                  <div className="flex-shrink-0 flex flex-col gap-2 items-end">
                     <div className={`px-4 py-2 rounded-lg border-2 ${getPriorityColor(item.priority)} font-semibold text-sm text-center min-w-[100px]`}>
                       {item.priority}
                     </div>
+                    <button
+                      onClick={() => undoReportItem(item)}
+                      className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-150 font-medium text-sm"
+                      title="Return item back to queue"
+                    >
+                      ↩️ Undo
+                    </button>
                   </div>
                 </div>
               </div>

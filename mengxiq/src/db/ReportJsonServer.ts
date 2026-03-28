@@ -75,3 +75,30 @@ export async function addReportItemDb(
     }
   )
 }
+
+export async function removeReportItemDb(
+  rid: string,
+  item: ReportItem
+) {
+  if (rid === "") { return; }
+  const r = await getReportDb(rid);
+  if (r.items === null || r.items.length === 0) {
+    return;
+  }
+  
+  // Remove the specific item by matching its unique properties
+  r.items = r.items.filter(reportItem => 
+    !(reportItem.description === item.description &&
+      reportItem.createdAt === item.createdAt &&
+      reportItem.qid === item.qid)
+  );
+
+  await fetch(
+    db_url + "/reports/" + rid,
+    {
+      method: "PUT",
+      body: JSON.stringify(r),
+      headers: { "Content-Type": "application/json" }
+    }
+  )
+}
