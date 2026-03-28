@@ -146,7 +146,15 @@ function QueueItem(
       <div className="flex justify-between items-start gap-4">
         <div className="flex-1">
           <div className="text-gray-800 mb-2 prose prose-base max-w-none">
-            <ReactMarkdown>{props.description}</ReactMarkdown>
+            <ReactMarkdown
+              components={{
+                a: ({node, ...props}) => (
+                  <a {...props} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer" />
+                )
+              }}
+            >
+              {props.description}
+            </ReactMarkdown>
           </div>
           {props.link && (
             <a 

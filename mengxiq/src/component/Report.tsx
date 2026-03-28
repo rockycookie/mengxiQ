@@ -560,8 +560,16 @@ function Report(): JSX.Element {
                     </div>
 
                     {/* Description */}
-                    <div className="text-lg font-semibold text-gray-800 mb-2 prose prose-base max-w-none">
-                      <ReactMarkdown>{item.description}</ReactMarkdown>
+                    <div className="text-lg text-gray-800 mb-2 prose prose-base max-w-none">
+                      <ReactMarkdown
+                        components={{
+                          a: ({node, ...props}) => (
+                            <a {...props} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer" />
+                          )
+                        }}
+                      >
+                        {item.description}
+                      </ReactMarkdown>
                     </div>
 
                     {/* Queue Info */}
