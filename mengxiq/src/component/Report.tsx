@@ -7,9 +7,25 @@ import { PriorityQueue } from '../model/PriorityQueue';
 import { ToDoItem } from '../model/ToDoItem';
 import { getHostname } from '../utils';
 
+// Extended type to track in-progress items
+type DisplayItem = {
+  type: 'completed' | 'in-progress';
+  description: string;
+  link: string;
+  priorityId: string;
+  priority: string;
+  createdAt: number;
+  create_time: string;
+  qname: string;
+  qid: string;
+  reportedAt?: number; // Only for completed items
+  itemId?: string; // Only for in-progress items (original ToDoItem id)
+};
+
 function Report(): JSX.Element {
   const [report, setReport] = useState<ReportType | null>(null);
   const [queues, setQueues] = useState<PriorityQueue[]>([]);
+  const [inProgressItems, setInProgressItems] = useState<DisplayItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'recent' | 'today'>('recent');
@@ -20,6 +36,7 @@ function Report(): JSX.Element {
   useEffect(() => {
     loadReport();
     loadQueues();
+    loadInProgressItems();
   }, []);
 
   async function loadReport() {
@@ -45,7 +62,47 @@ function Report(): JSX.Element {
     }
   }
 
-  async function undoReportItem(item: ReportItem) {
+  async function loadInProgressItems() {
+    try {
+      const queuesData = await listQueuesDb();
+      const allInProgressItems: DisplayItem[] = [];
+      
+      // Iterate through all queues and their items
+      for (const queue of queuesData) {
+        const fullQueue = await getQueueDb(queue.id);
+        if (fullQueue && fullQueue.items) {
+          for (const item of fullQueue.items) {
+            // Convert ToDoItem to DisplayItem
+            const priority = priorityLevelMap.get(item.priorityId);
+            const displayItem: DisplayItem = {
+              type: 'in-progress',
+              description: item.description,
+              link: item.link,
+              priorityId: item.priorityId,
+              priority: priority ? priority.display : 'Unknown',
+              createdAt: item.created_time,
+              create_time: new Date(item.created_time).toLocaleString(),
+              qname: queue.name,
+              qid: queue.id,
+              itemId: item.id
+            };
+            allInProgressItems.push(displayItem);
+          }
+        }
+      }
+      
+      setInProgressItems(allInProgressItems);
+    } catch (err) {
+      console.error('Error loading in-progress items:', err);
+    }
+  }
+
+  async function undoReportItem(item: DisplayItem) {
+    // Only completed items can be undone
+    if (item.type !== 'completed' || !item.reportedAt) {
+      return;
+    }
+    
     try {
       // Check if the original queue still exists
       const queue = await getQueueDb(item.qid);
@@ -55,7 +112,7 @@ function Report(): JSX.Element {
         return;
       }
       
-      // Convert ReportItem back to ToDoItem
+      // Convert DisplayItem back to ToDoItem
       const todoItem = new ToDoItem(
         item.description,
         item.link,
@@ -67,8 +124,19 @@ function Report(): JSX.Element {
       // Add back to the original queue
       await addItemDb(item.qid, todoItem);
       
-      // Remove from report
-      await removeReportItemDb(current_report_id, item);
+      // Remove from report - need to convert back to ReportItem for removal
+      const reportItem: ReportItem = {
+        description: item.description,
+        link: item.link,
+        priorityId: item.priorityId,
+        priority: item.priority,
+        createdAt: item.createdAt,
+        create_time: item.create_time,
+        qname: item.qname,
+        qid: item.qid,
+        reportedAt: item.reportedAt
+      };
+      await removeReportItemDb(current_report_id, reportItem);
       
       // Reload the report to reflect changes
       await loadReport();
@@ -162,43 +230,70 @@ function Report(): JSX.Element {
     return [...orderedQueues, ...deletedQueues];
   }
 
-  function getDateFilteredItems(): ReportItem[] {
-    if (!report || !report.items) return [];
-    
-    // Apply only date filter for recent tab
-    if (activeTab === 'recent') {
-      const lastWorkDay = getLastWorkDayTimestamp();
-      const today = getTodayTimestamp();
-      return report.items.filter(item => 
-        item.reportedAt >= lastWorkDay && item.reportedAt <= today
-      );
-    }
-    
-    // Apply date filter for today tab
-    if (activeTab === 'today') {
-      const today = getTodayTimestamp();
-      return report.items.filter(item => item.reportedAt === today);
-    }
-    
-    return report.items;
+  function convertReportItemToDisplayItem(item: ReportItem): DisplayItem {
+    return {
+      type: 'completed',
+      description: item.description,
+      link: item.link,
+      priorityId: item.priorityId,
+      priority: item.priority,
+      createdAt: item.createdAt,
+      create_time: item.create_time,
+      qname: item.qname,
+      qid: item.qid,
+      reportedAt: item.reportedAt
+    };
   }
 
-  function getFilteredItems(): ReportItem[] {
-    if (!report || !report.items) return [];
+  function getDateFilteredItems(): DisplayItem[] {
+    let reportItems: DisplayItem[] = [];
+    let inProgressFiltered: DisplayItem[] = [];
     
-    let filtered = report.items;
+    if (report && report.items) {
+      reportItems = report.items.map(convertReportItemToDisplayItem);
+    }
     
-    // Find items by tab (recent vs today vs all)
+    // Apply date filter based on active tab
     if (activeTab === 'recent') {
       const lastWorkDay = getLastWorkDayTimestamp();
       const today = getTodayTimestamp();
-      filtered = filtered.filter(item => 
-        item.reportedAt >= lastWorkDay && item.reportedAt <= today
+      
+      reportItems = reportItems.filter(item => 
+        item.reportedAt && item.reportedAt >= lastWorkDay && item.reportedAt <= today
       );
+      
+      // Filter in-progress items by creation time
+      inProgressFiltered = inProgressItems.filter(item => {
+        // Convert created_time timestamp to YYYYMMDD format for comparison
+        const createdDate = new Date(item.createdAt);
+        const createdYYYYMMDD = createdDate.getFullYear() * 10000 + 
+                               (createdDate.getMonth() + 1) * 100 + 
+                               createdDate.getDate();
+        return createdYYYYMMDD >= lastWorkDay && createdYYYYMMDD <= today;
+      });
     } else if (activeTab === 'today') {
       const today = getTodayTimestamp();
-      filtered = filtered.filter(item => item.reportedAt === today);
+      
+      reportItems = reportItems.filter(item => item.reportedAt === today);
+      
+      // Filter in-progress items created today
+      inProgressFiltered = inProgressItems.filter(item => {
+        const createdDate = new Date(item.createdAt);
+        const createdYYYYMMDD = createdDate.getFullYear() * 10000 + 
+                               (createdDate.getMonth() + 1) * 100 + 
+                               createdDate.getDate();
+        return createdYYYYMMDD === today;
+      });
+    } else {
+      // 'all' tab - no date filtering for report items, but don't show in-progress in "all"
+      inProgressFiltered = [];
     }
+    
+    return [...reportItems, ...inProgressFiltered];
+  }
+
+  function getFilteredItems(): DisplayItem[] {
+    let filtered = getDateFilteredItems();
     
     // Apply queue filter
     if (selectedQueues.size > 0) {
@@ -216,7 +311,7 @@ function Report(): JSX.Element {
     });
   }
 
-  function getPaginatedItems(): ReportItem[] {
+  function getPaginatedItems(): DisplayItem[] {
     const filtered = getFilteredItems();
     
     // Apply pagination to all tabs
@@ -260,19 +355,51 @@ function Report(): JSX.Element {
   
   // Calculate recent items count for tab display
   const recentItemsCount = (() => {
-    if (!report || !report.items) return 0;
     const lastWorkDay = getLastWorkDayTimestamp();
     const today = getTodayTimestamp();
-    return report.items.filter(item => 
-      item.reportedAt >= lastWorkDay && item.reportedAt <= today
-    ).length;
+    
+    let count = 0;
+    
+    // Count completed items
+    if (report && report.items) {
+      count += report.items.filter(item => 
+        item.reportedAt >= lastWorkDay && item.reportedAt <= today
+      ).length;
+    }
+    
+    // Count in-progress items
+    count += inProgressItems.filter(item => {
+      const createdDate = new Date(item.createdAt);
+      const createdYYYYMMDD = createdDate.getFullYear() * 10000 + 
+                             (createdDate.getMonth() + 1) * 100 + 
+                             createdDate.getDate();
+      return createdYYYYMMDD >= lastWorkDay && createdYYYYMMDD <= today;
+    }).length;
+    
+    return count;
   })();
   
   // Calculate today items count for tab display
   const todayItemsCount = (() => {
-    if (!report || !report.items) return 0;
     const today = getTodayTimestamp();
-    return report.items.filter(item => item.reportedAt === today).length;
+    
+    let count = 0;
+    
+    // Count completed items
+    if (report && report.items) {
+      count += report.items.filter(item => item.reportedAt === today).length;
+    }
+    
+    // Count in-progress items
+    count += inProgressItems.filter(item => {
+      const createdDate = new Date(item.createdAt);
+      const createdYYYYMMDD = createdDate.getFullYear() * 10000 + 
+                             (createdDate.getMonth() + 1) * 100 + 
+                             createdDate.getDate();
+      return createdYYYYMMDD === today;
+    }).length;
+    
+    return count;
   })();
 
   if (loading) {
@@ -415,10 +542,23 @@ function Report(): JSX.Element {
           ) : (
             <>
               <div className="divide-y divide-gray-200">
-                {paginatedItems.map((item: ReportItem, index: number) => (
+                {paginatedItems.map((item: DisplayItem, index: number) => (
               <div key={index} className="p-6 hover:bg-gray-50 transition-colors duration-150">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
+                    {/* Status Badge */}
+                    <div className="mb-2">
+                      {item.type === 'in-progress' ? (
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-md">
+                          🔄 IN PROGRESS
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-md">
+                          ✅ DONE
+                        </span>
+                      )}
+                    </div>
+
                     {/* Description */}
                     <div className="text-lg font-semibold text-gray-800 mb-2 prose prose-base max-w-none">
                       <ReactMarkdown>{item.description}</ReactMarkdown>
@@ -450,9 +590,11 @@ function Report(): JSX.Element {
                       <span>
                         🕒 Created: {item.create_time}
                       </span>
-                      <span>
-                        📅 Reported: {formatDate(item.reportedAt)}
-                      </span>
+                      {item.type === 'completed' && item.reportedAt && (
+                        <span>
+                          📅 Reported: {formatDate(item.reportedAt)}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -461,13 +603,15 @@ function Report(): JSX.Element {
                     <div className={`px-4 py-2 rounded-lg border-2 ${getPriorityColor(item.priority)} font-semibold text-sm text-center min-w-[100px]`}>
                       {item.priority}
                     </div>
-                    <button
-                      onClick={() => undoReportItem(item)}
-                      className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-150 font-medium text-sm"
-                      title="Return item back to queue"
-                    >
-                      ↩️ Undo
-                    </button>
+                    {item.type === 'completed' && (
+                      <button
+                        onClick={() => undoReportItem(item)}
+                        className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-150 font-medium text-sm"
+                        title="Return item back to queue"
+                      >
+                        ↩️ Undo
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
