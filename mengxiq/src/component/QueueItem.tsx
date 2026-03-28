@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { priorityLevelMap, priorityLevelMapKeys } from "../model/Priority";
+import { priorityLevelMap, priorityLevelMapKeys } from '../model/Priority';
 import { getHostname } from '../utils';
 
 function QueueItem(
@@ -20,7 +20,7 @@ function QueueItem(
   const [editLink, setEditLink] = useState(props.link);
   const [editPriorityId, setEditPriorityId] = useState(props.priorityId);
   const editDescriptionRef = useRef<HTMLTextAreaElement>(null);
-  
+
   // Get priority styling
   const getPriorityStyle = (priorityId: string) => {
     const styles: { [key: string]: string } = {
@@ -33,7 +33,7 @@ function QueueItem(
     return styles[priorityId] || 'border-gray-300';
   };
 
-  const priorityDisplay = priorityLevelMap.get(props.priorityId)?.display || "Unknown";
+  const priorityDisplay = priorityLevelMap.get(props.priorityId)?.display || 'Unknown';
   const borderColor = getPriorityStyle(props.priorityId);
 
   const autoResizeTextarea = (textarea: HTMLTextAreaElement | null) => {
@@ -51,7 +51,7 @@ function QueueItem(
 
   const handleSave = () => {
     if (!editDescription.trim()) {
-      alert("Description cannot be empty");
+      alert('Description cannot be empty');
       return;
     }
     props.onSaveEdit(editDescription, editLink, editPriorityId);
@@ -148,7 +148,7 @@ function QueueItem(
           <div className="text-gray-800 mb-2 prose prose-base max-w-none">
             <ReactMarkdown
               components={{
-                a: ({node, ...props}) => (
+                a: ({ node: _node, ...props }) => (
                   <a {...props} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer" />
                 )
               }}
@@ -157,9 +157,9 @@ function QueueItem(
             </ReactMarkdown>
           </div>
           {props.link && (
-            <a 
-              href={props.link} 
-              target="_blank" 
+            <a
+              href={props.link}
+              target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-800 text-sm inline-flex items-center gap-1 hover:underline"
             >
@@ -171,21 +171,21 @@ function QueueItem(
           {priorityDisplay}
         </span>
       </div>
-      
+
       <div className="mt-3 flex gap-2 flex-wrap">
-        <button 
+        <button
           onClick={props.reportFuncion}
           className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition-colors duration-150 text-sm font-medium flex items-center gap-1"
         >
           ✓ Done
         </button>
-        <button 
+        <button
           onClick={props.onEdit}
           className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors duration-150 text-sm font-medium"
         >
           ✏️ Edit
         </button>
-        <button 
+        <button
           onClick={props.deleteFuncion}
           className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors duration-150 text-sm font-medium flex items-center gap-1"
         >

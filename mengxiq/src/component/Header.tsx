@@ -10,8 +10,9 @@ function Header(
   }
 ): JSX.Element {
 
+  const { setQid } = props;
   const navigate = useNavigate();
-  const [curCreateQueueName, setCurCreateQueueName] = useState("");
+  const [curCreateQueueName, setCurCreateQueueName] = useState('');
   const [queues, setQueues] = useState<PriorityQueue[]>([]);
   const [deletedQueues, setDeletedQueues] = useState<PriorityQueue[]>([]);
   const [curDisplayQueueId, setCurDisplayQueueId] = useState<string | null>(null);
@@ -25,25 +26,25 @@ function Header(
       setQueues(result);
       if (result.length > 0) {
         if (curDisplayQueueId === null) {
-          props.setQid(result[0].id);
+          setQid(result[0].id);
           setCurDisplayQueueId(result[0].id);
         } else {
-          props.setQid(curDisplayQueueId);
+          setQid(curDisplayQueueId);
         }
       }
     });
-    
+
     listDeletedQueuesDb().then(result => {
       setDeletedQueues(result);
     });
-  }, [curDisplayQueueId, triggerRerender]);
+  }, [curDisplayQueueId, triggerRerender, setQid]);
 
   function handleQueueCreation() {
     if (!curCreateQueueName.trim()) {
-      alert("Please enter a queue name");
+      alert('Please enter a queue name');
       return;
     }
-    
+
     createQueueDb(curCreateQueueName)
       .then(() => {
         setTriggerRerender(triggerRerender + 1);
@@ -55,7 +56,7 @@ function Header(
             setCurDisplayQueueId(newQueue.id);
           }
         });
-        setCurCreateQueueName("");
+        setCurCreateQueueName('');
         setShowCreateForm(false);
       });
   }
@@ -75,7 +76,7 @@ function Header(
               setCurDisplayQueueId(result[0].id);
             } else {
               setCurDisplayQueueId(null);
-              props.setQid("");
+              props.setQid('');
             }
           });
         }
@@ -116,7 +117,7 @@ function Header(
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
     const x = event.clientX;
     const y = event.clientY;
-    
+
     if (x < rect.left || x >= rect.right || y < rect.top || y >= rect.bottom) {
       setDragOverQueueId(null);
     }
@@ -125,7 +126,7 @@ function Header(
   function handleDrop(targetQid: string, event: React.DragEvent) {
     event.preventDefault();
     event.stopPropagation();
-    
+
     if (!draggedQueueId || draggedQueueId === targetQid) {
       setDragOverQueueId(null);
       return;
@@ -134,19 +135,19 @@ function Header(
     // Reorder the queues array
     const draggedIndex = queues.findIndex(q => q.id === draggedQueueId);
     const targetIndex = queues.findIndex(q => q.id === targetQid);
-    
+
     if (draggedIndex !== -1 && targetIndex !== -1) {
       const newQueues = [...queues];
       const [removed] = newQueues.splice(draggedIndex, 1);
       newQueues.splice(targetIndex, 0, removed);
-      
+
       setQueues(newQueues);
-      
+
       // Update the order in the database
       const queueIds = newQueues.map(q => q.id);
       updateQueueOrderDb(queueIds);
     }
-    
+
     setDragOverQueueId(null);
     setDraggedQueueId(null);
   }
@@ -201,7 +202,7 @@ function Header(
                 <button
                   onClick={() => {
                     setShowCreateForm(false);
-                    setCurCreateQueueName("");
+                    setCurCreateQueueName('');
                   }}
                   className="px-3 py-1 bg-gray-400 text-white rounded hover:bg-gray-500 transition-colors duration-150 text-sm font-medium"
                 >
@@ -241,15 +242,13 @@ function Header(
                 onDragEnter={(e) => handleDragEnter(queue.id, e)}
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(queue.id, e)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-t-lg font-medium transition-all duration-150 cursor-move ${
-                  curDisplayQueueId === queue.id
+                className={`flex items-center gap-2 px-4 py-2 rounded-t-lg font-medium transition-all duration-150 cursor-move ${curDisplayQueueId === queue.id
                     ? 'bg-blue-500 text-white shadow-md'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                } ${
-                  dragOverQueueId === queue.id && draggedQueueId !== queue.id
+                  } ${dragOverQueueId === queue.id && draggedQueueId !== queue.id
                     ? 'border-2 border-blue-400 border-dashed'
                     : ''
-                }`}
+                  }`}
               >
                 <button
                   onClick={() => handleQueueSwitch(queue.id)}
@@ -259,9 +258,8 @@ function Header(
                 </button>
                 <button
                   onClick={(e) => handleDeleteQueue(queue.id, queue.name, e)}
-                  className={`ml-2 text-xs hover:opacity-70 transition-opacity ${
-                    curDisplayQueueId === queue.id ? 'text-white' : 'text-red-600'
-                  }`}
+                  className={`ml-2 text-xs hover:opacity-70 transition-opacity ${curDisplayQueueId === queue.id ? 'text-white' : 'text-red-600'
+                    }`}
                   title="Delete queue"
                 >
                   ✕

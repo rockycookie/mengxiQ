@@ -1,9 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
-import { priorityLevelMap } from '../model/Priority';
 
-const db_url = "http://localhost:8001";
+const db_url = 'http://localhost:8001';
 
-export const current_report_id = "7ce7c617-82ab-4fa0-8cfd-051c02751862";
+export const current_report_id = '7ce7c617-82ab-4fa0-8cfd-051c02751862';
 
 export class Report {
   constructor(
@@ -14,7 +13,7 @@ export class Report {
 }
 
 export class ReportItem {
-  reportedAt: number
+  reportedAt: number;
   constructor(
     public description: string,
     public link: string,
@@ -26,30 +25,30 @@ export class ReportItem {
     public qid: string,
   ) {
     const now = new Date();
-    this.reportedAt = now.getFullYear() * 10000 + (now.getMonth()+1) * 100 + now.getDate();
+    this.reportedAt = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
   }
 }
 
 export async function listReportsDb() {
-  return await (await fetch(db_url + "/reports/")).json();
+  return await (await fetch(db_url + '/reports/')).json();
 }
 
 export async function createReportDb(rname: string): Promise<Report> {
   const newReport = new Report(uuidv4(), rname, []);
   await fetch(
-    db_url + "/reports/",
+    db_url + '/reports/',
     {
-      method: "POST",
+      method: 'POST',
       body: JSON.stringify(newReport),
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
     }
-  )
+  );
   return newReport;
 }
 
 export async function getReportDb(rid: string): Promise<Report> {
-  if (rid === "") { throw Error("Not able to process empty report ID"); }
-  return await (await fetch(db_url + "/reports/" + rid)).json();
+  if (rid === '') { throw Error('Not able to process empty report ID'); }
+  return await (await fetch(db_url + '/reports/' + rid)).json();
 }
 
 export async function addReportItemDb(
@@ -57,7 +56,7 @@ export async function addReportItemDb(
   item: ReportItem,
   sortAlg: (a: ReportItem, b: ReportItem) => number
 ) {
-  if (rid === "") { return; }
+  if (rid === '') { return; }
   const r = await getReportDb(rid);
   if (r.items === null) {
     r.items = [item];
@@ -67,38 +66,38 @@ export async function addReportItemDb(
   r.items.sort(sortAlg);
 
   await fetch(
-    db_url + "/reports/" + rid,
+    db_url + '/reports/' + rid,
     {
-      method: "PUT",
+      method: 'PUT',
       body: JSON.stringify(r),
-      headers: { "Content-Type": "application/json" }
+      headers: { 'Content-Type': 'application/json' }
     }
-  )
+  );
 }
 
 export async function removeReportItemDb(
   rid: string,
   item: ReportItem
 ) {
-  if (rid === "") { return; }
+  if (rid === '') { return; }
   const r = await getReportDb(rid);
   if (r.items === null || r.items.length === 0) {
     return;
   }
-  
+
   // Remove the specific item by matching its unique properties
-  r.items = r.items.filter(reportItem => 
+  r.items = r.items.filter(reportItem =>
     !(reportItem.description === item.description &&
       reportItem.createdAt === item.createdAt &&
       reportItem.qid === item.qid)
   );
 
   await fetch(
-    db_url + "/reports/" + rid,
+    db_url + '/reports/' + rid,
     {
-      method: "PUT",
+      method: 'PUT',
       body: JSON.stringify(r),
-      headers: { "Content-Type": "application/json" }
+      headers: { 'Content-Type': 'application/json' }
     }
-  )
+  );
 }

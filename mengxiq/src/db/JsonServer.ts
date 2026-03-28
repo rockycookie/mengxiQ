@@ -1,10 +1,10 @@
 import { v4 as uuidv4 } from 'uuid';
 import { ToDoItem } from '../model/ToDoItem';
 
-const db_url = "http://localhost:8002"
+const db_url = 'http://localhost:8002';
 
 export async function listQueuesDb(includeDeleted: boolean = false) {
-  const queues = await (await fetch(db_url + "/queues/")).json();
+  const queues = await (await fetch(db_url + '/queues/')).json();
   const filteredQueues = includeDeleted ? queues : queues.filter((q: any) => !q.isDeleted);
   // Sort by displayOrder (or by creation order if displayOrder is missing)
   return filteredQueues.sort((a: any, b: any) => {
@@ -15,7 +15,7 @@ export async function listQueuesDb(includeDeleted: boolean = false) {
 }
 
 export async function listDeletedQueuesDb() {
-  const queues = await (await fetch(db_url + "/queues/")).json();
+  const queues = await (await fetch(db_url + '/queues/')).json();
   return queues.filter((q: any) => q.isDeleted);
 }
 
@@ -35,23 +35,23 @@ export async function createQueueDb(qname: string): Promise<any> {
     displayOrder: maxOrder + 1
   };
   await fetch(
-    db_url + "/queues/",
+    db_url + '/queues/',
     {
-      method: "POST",
+      method: 'POST',
       body: JSON.stringify(newQueue),
-      headers: {"Content-Type": "application/json"},
+      headers: {'Content-Type': 'application/json'},
     }
-  )
+  );
   return newQueue;
 }
 
 export async function getQueueDb(qid: string) {
-  if (qid === "") { return undefined; }
-  return await (await fetch(db_url + "/queues/" + qid)).json();
+  if (qid === '') { return undefined; }
+  return await (await fetch(db_url + '/queues/' + qid)).json();
 }
 
 export async function addItemDb(qid: string, item: ToDoItem) {
-  if (qid === "") { return; }
+  if (qid === '') { return; }
   const q = await getQueueDb(qid);
   if (q.items === null) {
     q.items = [item];
@@ -59,17 +59,17 @@ export async function addItemDb(qid: string, item: ToDoItem) {
     q.items.push(item);
   }
   await fetch(
-    db_url + "/queues/" + qid,
+    db_url + '/queues/' + qid,
     {
-      method: "PUT",
+      method: 'PUT',
       body: JSON.stringify(q),
-      headers: {"Content-Type": "application/json"},
+      headers: {'Content-Type': 'application/json'},
     }
-  )
+  );
 }
 
 export async function deleteItemDb(qid: string, itemId: string) {
-  if (qid === "") { return; }
+  if (qid === '') { return; }
   const q = await getQueueDb(qid);
   if (q.items === null) {
     return;
@@ -77,17 +77,17 @@ export async function deleteItemDb(qid: string, itemId: string) {
     q.items = q.items.filter((item: any) => (item.id !== itemId));
   }
   await fetch(
-    db_url + "/queues/" + qid,
+    db_url + '/queues/' + qid,
     {
-      method: "PUT",
+      method: 'PUT',
       body: JSON.stringify(q),
-      headers: {"Content-Type": "application/json"},
+      headers: {'Content-Type': 'application/json'},
     }
-  )
+  );
 }
 
 export async function updateItemDb(qid: string, updatedItem: ToDoItem) {
-  if (qid === "") { return; }
+  if (qid === '') { return; }
   const q = await getQueueDb(qid);
   if (q.items === null) {
     return;
@@ -97,17 +97,17 @@ export async function updateItemDb(qid: string, updatedItem: ToDoItem) {
     );
   }
   await fetch(
-    db_url + "/queues/" + qid,
+    db_url + '/queues/' + qid,
     {
-      method: "PUT",
+      method: 'PUT',
       body: JSON.stringify(q),
-      headers: {"Content-Type": "application/json"},
+      headers: {'Content-Type': 'application/json'},
     }
-  )
+  );
 }
 
 export async function softDeleteQueueDb(qid: string) {
-  if (qid === "") { return; }
+  if (qid === '') { return; }
   const q = await getQueueDb(qid);
   if (!q) { return; }
   
@@ -115,17 +115,17 @@ export async function softDeleteQueueDb(qid: string) {
   q.deletedAt = Date.now();
   
   await fetch(
-    db_url + "/queues/" + qid,
+    db_url + '/queues/' + qid,
     {
-      method: "PUT",
+      method: 'PUT',
       body: JSON.stringify(q),
-      headers: {"Content-Type": "application/json"},
+      headers: {'Content-Type': 'application/json'},
     }
-  )
+  );
 }
 
 export async function restoreQueueDb(qid: string) {
-  if (qid === "") { return; }
+  if (qid === '') { return; }
   const q = await getQueueDb(qid);
   if (!q) { return; }
   
@@ -133,25 +133,25 @@ export async function restoreQueueDb(qid: string) {
   q.deletedAt = undefined;
   
   await fetch(
-    db_url + "/queues/" + qid,
+    db_url + '/queues/' + qid,
     {
-      method: "PUT",
+      method: 'PUT',
       body: JSON.stringify(q),
-      headers: {"Content-Type": "application/json"},
+      headers: {'Content-Type': 'application/json'},
     }
-  )
+  );
 }
 
 export async function permanentDeleteQueueDb(qid: string) {
-  if (qid === "") { return; }
+  if (qid === '') { return; }
   
   await fetch(
-    db_url + "/queues/" + qid,
+    db_url + '/queues/' + qid,
     {
-      method: "DELETE",
-      headers: {"Content-Type": "application/json"},
+      method: 'DELETE',
+      headers: {'Content-Type': 'application/json'},
     }
-  )
+  );
 }
 
 export async function updateQueueOrderDb(queueIds: string[]) {
@@ -162,11 +162,11 @@ export async function updateQueueOrderDb(queueIds: string[]) {
     if (queue) {
       queue.displayOrder = index;
       await fetch(
-        db_url + "/queues/" + qid,
+        db_url + '/queues/' + qid,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify(queue),
-          headers: {"Content-Type": "application/json"},
+          headers: {'Content-Type': 'application/json'},
         }
       );
     }

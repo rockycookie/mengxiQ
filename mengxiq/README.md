@@ -31,3 +31,13 @@ The build is minified and the filenames include the hashes.\
 Your app is ready to be deployed!
 
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+
+### `npm run lint`
+
+Runs ESLint to check for code quality issues and potential errors in TypeScript/React files.\
+This helps maintain code consistency and catch common mistakes.
+
+### `npm run lint:fix`
+
+Automatically fixes linting issues that can be corrected.\
+This command runs ESLint with the `--fix` flag to resolve formatting and style issues automatically.

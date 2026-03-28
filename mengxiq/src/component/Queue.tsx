@@ -1,19 +1,19 @@
-import QueueItem from "./QueueItem";
+import QueueItem from './QueueItem';
 import { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { priorityLevelMap, priorityLevelMapKeys } from "../model/Priority"
-import { addItemDb, deleteItemDb, getQueueDb, updateItemDb } from "../db/JsonServer";
-import { ToDoItem } from "../model/ToDoItem";
-import { ReportItem, addReportItemDb, current_report_id } from "../db/ReportJsonServer";
+import { priorityLevelMap, priorityLevelMapKeys } from '../model/Priority';
+import { addItemDb, deleteItemDb, getQueueDb, updateItemDb } from '../db/JsonServer';
+import { ToDoItem } from '../model/ToDoItem';
+import { ReportItem, addReportItemDb, current_report_id } from '../db/ReportJsonServer';
 
 function Queue(
   props: {qid: string}
 ): JSX.Element {
   const [items, setItems] = useState<ToDoItem[]>([]);
-  const [curDescription, setCurDescription] = useState<string>("");
-  const [curLink, setCurLink] = useState("");
-  const [curPriorityId, setCurPriorityId] = useState("select_priority");
-  const [qname, setQname] = useState<string>("");
+  const [curDescription, setCurDescription] = useState<string>('');
+  const [curLink, setCurLink] = useState('');
+  const [curPriorityId, setCurPriorityId] = useState('select_priority');
+  const [qname, setQname] = useState<string>('');
   const [showForm, setShowForm] = useState(true);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -25,7 +25,7 @@ function Queue(
     } else {
       return a.created_time - b.created_time;
     }
-  }
+  };
 
   const sortReportAlg = (a: ReportItem, b: ReportItem) => {
     /* Sort by:
@@ -44,7 +44,7 @@ function Queue(
     } else {
       return b.reportedAt - a.reportedAt; // later/larger comes first
     }
-  }
+  };
 
   useEffect(() => {
     // console.log("Fetching queue info for: " + props.qid);
@@ -52,7 +52,7 @@ function Queue(
       .then((result) => {
         // console.log(result);
         if (result !== null) {
-          result.items.sort(sortAlg)
+          result.items.sort(sortAlg);
           setItems(result.items);
           setQname(result.name);
         }
@@ -72,12 +72,12 @@ function Queue(
 
   function handleAddItem() {
     if (!curDescription.trim()) {
-      alert("Please enter a description");
+      alert('Please enter a description');
       return;
     }
     
-    if (curPriorityId === "select_priority") {
-      alert("Please select a priority");
+    if (curPriorityId === 'select_priority') {
+      alert('Please select a priority');
       return;
     }
 
@@ -96,9 +96,9 @@ function Queue(
     addItemDb(props.qid, newItem);
     
     // Reset form
-    setCurDescription("");
-    setCurLink("");
-    setCurPriorityId("select_priority");
+    setCurDescription('');
+    setCurLink('');
+    setCurPriorityId('select_priority');
   }
 
   function deleteItem(itemId: string) {
@@ -275,7 +275,7 @@ function Queue(
               onSaveEdit={(desc, link, priority) => updateItem(d.id, desc, link, priority)}
               deleteFuncion={() => deleteItem(d.id)}
               reportFuncion={() => reportItem(d.id)}
-            />
+            />;
           })}
         </div>
       )}

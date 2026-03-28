@@ -1,9 +1,9 @@
-import Header from "./component/Header";
-import Body from "./component/Body";
-import Report from "./component/Report";
-import ReportHeader from "./component/ReportHeader";
-import DeletedQueues from "./component/DeletedQueues";
-import DeletedQueuesHeader from "./component/DeletedQueuesHeader";
+import Header from './component/Header';
+import Body from './component/Body';
+import Report from './component/Report';
+import ReportHeader from './component/ReportHeader';
+import DeletedQueues from './component/DeletedQueues';
+import DeletedQueuesHeader from './component/DeletedQueuesHeader';
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 
@@ -43,7 +43,7 @@ function App() {
   const [qid, setQid] = useState<string>();
   
   useEffect(() => {
-    console.log("qid updated to: " + qid);
+    console.log('qid updated to: ' + qid);
   }, [qid]);
 
   return (

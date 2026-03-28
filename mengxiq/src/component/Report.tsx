@@ -66,7 +66,7 @@ function Report(): JSX.Element {
     try {
       const queuesData = await listQueuesDb();
       const allInProgressItems: DisplayItem[] = [];
-      
+
       // Iterate through all queues and their items
       for (const queue of queuesData) {
         const fullQueue = await getQueueDb(queue.id);
@@ -90,7 +90,7 @@ function Report(): JSX.Element {
           }
         }
       }
-      
+
       setInProgressItems(allInProgressItems);
     } catch (err) {
       console.error('Error loading in-progress items:', err);
@@ -102,16 +102,16 @@ function Report(): JSX.Element {
     if (item.type !== 'completed' || !item.reportedAt) {
       return;
     }
-    
+
     try {
       // Check if the original queue still exists
       const queue = await getQueueDb(item.qid);
-      
+
       if (!queue) {
         alert(`Queue "${item.qname}" no longer exists. Cannot undo this item.`);
         return;
       }
-      
+
       // Convert DisplayItem back to ToDoItem
       const todoItem = new ToDoItem(
         item.description,
@@ -120,10 +120,10 @@ function Report(): JSX.Element {
         item.createdAt,
         item.priorityId
       );
-      
+
       // Add back to the original queue
       await addItemDb(item.qid, todoItem);
-      
+
       // Remove from report - need to convert back to ReportItem for removal
       const reportItem: ReportItem = {
         description: item.description,
@@ -137,10 +137,10 @@ function Report(): JSX.Element {
         reportedAt: item.reportedAt
       };
       await removeReportItemDb(current_report_id, reportItem);
-      
+
       // Reload the report to reflect changes
       await loadReport();
-      
+
     } catch (err) {
       console.error('Error undoing report item:', err);
       alert('Failed to undo report item. Please try again.');
@@ -166,7 +166,7 @@ function Report(): JSX.Element {
   function getLastWorkDayTimestamp(): number {
     const today = new Date();
     const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    
+
     // If today is Monday (1), go back to Thursday (4 days ago) as I do not do report analysis on Friday nor weekend
     // If today is Sunday (0), go back 3 days to Thursday
     // If today is Saturday (6), go back 2 days to Thursday
@@ -186,20 +186,20 @@ function Report(): JSX.Element {
         daysToSubtract = 1;
         break;
     }
-    
+
     const lastWorkDay = new Date(today);
     lastWorkDay.setDate(today.getDate() - daysToSubtract);
-    
-    return lastWorkDay.getFullYear() * 10000 + 
-           (lastWorkDay.getMonth() + 1) * 100 + 
-           lastWorkDay.getDate();
+
+    return lastWorkDay.getFullYear() * 10000 +
+      (lastWorkDay.getMonth() + 1) * 100 +
+      lastWorkDay.getDate();
   }
 
   function getTodayTimestamp(): number {
     const today = new Date();
-    return today.getFullYear() * 10000 + 
-           (today.getMonth() + 1) * 100 + 
-           today.getDate();
+    return today.getFullYear() * 10000 +
+      (today.getMonth() + 1) * 100 +
+      today.getDate();
   }
 
   function getPriorityRank(priorityId: string): number {
@@ -209,24 +209,24 @@ function Report(): JSX.Element {
 
   function getUniqueQueues(): string[] {
     if (!report || !report.items) return [];
-    
+
     // Get date-filtered items to check which queues have items
     const itemsToCheck = getDateFilteredItems();
-    
+
     // Get unique queue names from date-filtered items (only queues with items)
     const reportQueueNames = new Set(itemsToCheck.map(item => item.qname));
     const activeQueueNames = new Set(queues.map(q => q.name));
-    
+
     // First, add queues that exist in the queues list (in displayOrder)
     const orderedQueues = queues
       .filter(q => reportQueueNames.has(q.name))
       .map(q => q.name);
-    
+
     // Then, add any queue names from report that don't exist in queues list (likely deleted)
     const deletedQueues = Array.from(reportQueueNames)
       .filter(qname => !activeQueueNames.has(qname))
       .sort();
-    
+
     return [...orderedQueues, ...deletedQueues];
   }
 
@@ -248,58 +248,58 @@ function Report(): JSX.Element {
   function getDateFilteredItems(): DisplayItem[] {
     let reportItems: DisplayItem[] = [];
     let inProgressFiltered: DisplayItem[] = [];
-    
+
     if (report && report.items) {
       reportItems = report.items.map(convertReportItemToDisplayItem);
     }
-    
+
     // Apply date filter based on active tab
     if (activeTab === 'recent') {
       const lastWorkDay = getLastWorkDayTimestamp();
       const today = getTodayTimestamp();
-      
-      reportItems = reportItems.filter(item => 
+
+      reportItems = reportItems.filter(item =>
         item.reportedAt && item.reportedAt >= lastWorkDay && item.reportedAt <= today
       );
-      
+
       // Filter in-progress items by creation time
       inProgressFiltered = inProgressItems.filter(item => {
         // Convert created_time timestamp to YYYYMMDD format for comparison
         const createdDate = new Date(item.createdAt);
-        const createdYYYYMMDD = createdDate.getFullYear() * 10000 + 
-                               (createdDate.getMonth() + 1) * 100 + 
-                               createdDate.getDate();
+        const createdYYYYMMDD = createdDate.getFullYear() * 10000 +
+          (createdDate.getMonth() + 1) * 100 +
+          createdDate.getDate();
         return createdYYYYMMDD >= lastWorkDay && createdYYYYMMDD <= today;
       });
     } else if (activeTab === 'today') {
       const today = getTodayTimestamp();
-      
+
       reportItems = reportItems.filter(item => item.reportedAt === today);
-      
+
       // Filter in-progress items created today
       inProgressFiltered = inProgressItems.filter(item => {
         const createdDate = new Date(item.createdAt);
-        const createdYYYYMMDD = createdDate.getFullYear() * 10000 + 
-                               (createdDate.getMonth() + 1) * 100 + 
-                               createdDate.getDate();
+        const createdYYYYMMDD = createdDate.getFullYear() * 10000 +
+          (createdDate.getMonth() + 1) * 100 +
+          createdDate.getDate();
         return createdYYYYMMDD === today;
       });
     } else {
       // 'all' tab - no date filtering for report items, but don't show in-progress in "all"
       inProgressFiltered = [];
     }
-    
+
     return [...reportItems, ...inProgressFiltered];
   }
 
   function getFilteredItems(): DisplayItem[] {
     let filtered = getDateFilteredItems();
-    
+
     // Apply queue filter
     if (selectedQueues.size > 0) {
       filtered = filtered.filter(item => selectedQueues.has(item.qname));
     }
-    
+
     // Sort by priority (high to low), then by creation time (old to new)
     return filtered.sort((a, b) => {
       const priorityDiff = getPriorityRank(b.priorityId) - getPriorityRank(a.priorityId);
@@ -313,7 +313,7 @@ function Report(): JSX.Element {
 
   function getPaginatedItems(): DisplayItem[] {
     const filtered = getFilteredItems();
-    
+
     // Apply pagination to all tabs
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
@@ -352,53 +352,53 @@ function Report(): JSX.Element {
   const filteredItems = getFilteredItems();
   const paginatedItems = getPaginatedItems();
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-  
+
   // Calculate recent items count for tab display
   const recentItemsCount = (() => {
     const lastWorkDay = getLastWorkDayTimestamp();
     const today = getTodayTimestamp();
-    
+
     let count = 0;
-    
+
     // Count completed items
     if (report && report.items) {
-      count += report.items.filter(item => 
+      count += report.items.filter(item =>
         item.reportedAt >= lastWorkDay && item.reportedAt <= today
       ).length;
     }
-    
+
     // Count in-progress items
     count += inProgressItems.filter(item => {
       const createdDate = new Date(item.createdAt);
-      const createdYYYYMMDD = createdDate.getFullYear() * 10000 + 
-                             (createdDate.getMonth() + 1) * 100 + 
-                             createdDate.getDate();
+      const createdYYYYMMDD = createdDate.getFullYear() * 10000 +
+        (createdDate.getMonth() + 1) * 100 +
+        createdDate.getDate();
       return createdYYYYMMDD >= lastWorkDay && createdYYYYMMDD <= today;
     }).length;
-    
+
     return count;
   })();
-  
+
   // Calculate today items count for tab display
   const todayItemsCount = (() => {
     const today = getTodayTimestamp();
-    
+
     let count = 0;
-    
+
     // Count completed items
     if (report && report.items) {
       count += report.items.filter(item => item.reportedAt === today).length;
     }
-    
+
     // Count in-progress items
     count += inProgressItems.filter(item => {
       const createdDate = new Date(item.createdAt);
-      const createdYYYYMMDD = createdDate.getFullYear() * 10000 + 
-                             (createdDate.getMonth() + 1) * 100 + 
-                             createdDate.getDate();
+      const createdYYYYMMDD = createdDate.getFullYear() * 10000 +
+        (createdDate.getMonth() + 1) * 100 +
+        createdDate.getDate();
       return createdYYYYMMDD === today;
     }).length;
-    
+
     return count;
   })();
 
@@ -458,33 +458,30 @@ function Report(): JSX.Element {
           {/* Tabs */}
           <div className="border-b border-gray-200">
             <div className="flex gap-2 px-6">
-                <button
-                    onClick={() => handleTabChange('recent')}
-                    className={`px-4 py-3 font-medium text-sm transition-all duration-150 border-b-2 ${
-                    activeTab === 'recent'
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-600 hover:text-gray-800'
-                    }`}
-                >
-                    Since Last Workday ({recentItemsCount})
+              <button
+                onClick={() => handleTabChange('recent')}
+                className={`px-4 py-3 font-medium text-sm transition-all duration-150 border-b-2 ${activeTab === 'recent'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-600 hover:text-gray-800'
+                  }`}
+              >
+                Since Last Workday ({recentItemsCount})
               </button>
               <button
                 onClick={() => handleTabChange('today')}
-                className={`px-4 py-3 font-medium text-sm transition-all duration-150 border-b-2 ${
-                  activeTab === 'today'
+                className={`px-4 py-3 font-medium text-sm transition-all duration-150 border-b-2 ${activeTab === 'today'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-600 hover:text-gray-800'
-                }`}
+                  }`}
               >
                 Today ({todayItemsCount})
               </button>
               <button
                 onClick={() => handleTabChange('all')}
-                className={`px-4 py-3 font-medium text-sm transition-all duration-150 border-b-2 ${
-                  activeTab === 'all'
+                className={`px-4 py-3 font-medium text-sm transition-all duration-150 border-b-2 ${activeTab === 'all'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-600 hover:text-gray-800'
-                }`}
+                  }`}
               >
                 All Items ({report.items.length})
               </button>
@@ -503,15 +500,14 @@ function Report(): JSX.Element {
                 {/* All Queues Toggle */}
                 <button
                   onClick={toggleAllQueues}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${
-                    selectedQueues.size === 0 || selectedQueues.size === uniqueQueues.length
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${selectedQueues.size === 0 || selectedQueues.size === uniqueQueues.length
                       ? 'bg-blue-500 text-white shadow-md'
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
+                    }`}
                 >
                   {(selectedQueues.size === 0 || selectedQueues.size === uniqueQueues.length) ? '✓ ' : ''}All Queues ({dateFilteredItems.length})
                 </button>
-                
+
                 {/* Individual Queue Cards */}
                 {uniqueQueues.map((queue) => {
                   const count = dateFilteredItems.filter(item => item.qname === queue).length;
@@ -520,11 +516,10 @@ function Report(): JSX.Element {
                     <button
                       key={queue}
                       onClick={() => toggleQueue(queue)}
-                      className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${
-                        isSelected
+                      className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${isSelected
                           ? 'bg-blue-500 text-white shadow-md'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                        }`}
                     >
                       {isSelected ? '✓ ' : ''}{queue} ({count})
                     </button>
@@ -543,87 +538,87 @@ function Report(): JSX.Element {
             <>
               <div className="divide-y divide-gray-200">
                 {paginatedItems.map((item: DisplayItem, index: number) => (
-              <div key={index} className="p-6 hover:bg-gray-50 transition-colors duration-150">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    {/* Status Badge */}
-                    <div className="mb-2">
-                      {item.type === 'in-progress' ? (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-md">
-                          🔄 IN PROGRESS
-                        </span>
-                      ) : (
-                        <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-md">
-                          ✅ DONE
-                        </span>
-                      )}
-                    </div>
+                  <div key={index} className="p-6 hover:bg-gray-50 transition-colors duration-150">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        {/* Status Badge */}
+                        <div className="mb-2">
+                          {item.type === 'in-progress' ? (
+                            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-md">
+                              🔄 IN PROGRESS
+                            </span>
+                          ) : (
+                            <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-md">
+                              ✅ DONE
+                            </span>
+                          )}
+                        </div>
 
-                    {/* Description */}
-                    <div className="text-lg text-gray-800 mb-2 prose prose-base max-w-none">
-                      <ReactMarkdown
-                        components={{
-                          a: ({node, ...props}) => (
-                            <a {...props} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer" />
-                          )
-                        }}
-                      >
-                        {item.description}
-                      </ReactMarkdown>
-                    </div>
+                        {/* Description */}
+                        <div className="text-lg text-gray-800 mb-2 prose prose-base max-w-none">
+                          <ReactMarkdown
+                            components={{
+                              a: ({ node: _node, ...props }) => (
+                                <a {...props} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer" />
+                              )
+                            }}
+                          >
+                            {item.description}
+                          </ReactMarkdown>
+                        </div>
 
-                    {/* Queue Info */}
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-sm text-gray-600">
-                        📋 Queue: <span className="font-medium">{item.qname}</span>
-                      </span>
-                    </div>
+                        {/* Queue Info */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-sm text-gray-600">
+                            📋 Queue: <span className="font-medium">{item.qname}</span>
+                          </span>
+                        </div>
 
-                    {/* Link */}
-                    {item.link && (
-                      <div className="mb-3">
-                        <a
-                          href={item.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 underline text-sm break-all"
-                        >
-                          🔗 Ref Link: {getHostname(item.link)}
-                        </a>
+                        {/* Link */}
+                        {item.link && (
+                          <div className="mb-3">
+                            <a
+                              href={item.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 underline text-sm break-all"
+                            >
+                              🔗 Ref Link: {getHostname(item.link)}
+                            </a>
+                          </div>
+                        )}
+
+                        {/* Metadata */}
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                          <span>
+                            🕒 Created: {item.create_time}
+                          </span>
+                          {item.type === 'completed' && item.reportedAt && (
+                            <span>
+                              📅 Reported: {formatDate(item.reportedAt)}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    )}
 
-                    {/* Metadata */}
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                      <span>
-                        🕒 Created: {item.create_time}
-                      </span>
-                      {item.type === 'completed' && item.reportedAt && (
-                        <span>
-                          📅 Reported: {formatDate(item.reportedAt)}
-                        </span>
-                      )}
+                      {/* Priority Badge and Undo Button */}
+                      <div className="flex-shrink-0 flex flex-col gap-2 items-end">
+                        <div className={`px-4 py-2 rounded-lg border-2 ${getPriorityColor(item.priority)} font-semibold text-sm text-center min-w-[100px]`}>
+                          {item.priority}
+                        </div>
+                        {item.type === 'completed' && (
+                          <button
+                            onClick={() => undoReportItem(item)}
+                            className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-150 font-medium text-sm"
+                            title="Return item back to queue"
+                          >
+                            ↩️ Undo
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-
-                  {/* Priority Badge and Undo Button */}
-                  <div className="flex-shrink-0 flex flex-col gap-2 items-end">
-                    <div className={`px-4 py-2 rounded-lg border-2 ${getPriorityColor(item.priority)} font-semibold text-sm text-center min-w-[100px]`}>
-                      {item.priority}
-                    </div>
-                    {item.type === 'completed' && (
-                      <button
-                        onClick={() => undoReportItem(item)}
-                        className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-150 font-medium text-sm"
-                        title="Return item back to queue"
-                      >
-                        ↩️ Undo
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+                ))}
               </div>
 
               {/* Pagination Controls */}
@@ -637,40 +632,38 @@ function Report(): JSX.Element {
                       <button
                         onClick={() => setCurrentPage(currentPage - 1)}
                         disabled={currentPage === 1}
-                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${
-                          currentPage === 1
+                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${currentPage === 1
                             ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                             : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-                        }`}
+                          }`}
                       >
                         ← Previous
                       </button>
-                      
+
                       <div className="flex items-center gap-1">
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
                           // Show first page, last page, current page, and pages around current
-                          const showPage = page === 1 || 
-                                          page === totalPages || 
-                                          (page >= currentPage - 1 && page <= currentPage + 1);
-                          
+                          const showPage = page === 1 ||
+                            page === totalPages ||
+                            (page >= currentPage - 1 && page <= currentPage + 1);
+
                           const showEllipsis = (page === currentPage - 2 && currentPage > 3) ||
-                                              (page === currentPage + 2 && currentPage < totalPages - 2);
-                          
+                            (page === currentPage + 2 && currentPage < totalPages - 2);
+
                           if (showEllipsis) {
                             return <span key={page} className="px-2 text-gray-400">...</span>;
                           }
-                          
+
                           if (!showPage) return null;
-                          
+
                           return (
                             <button
                               key={page}
                               onClick={() => setCurrentPage(page)}
-                              className={`px-3 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${
-                                currentPage === page
+                              className={`px-3 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${currentPage === page
                                   ? 'bg-blue-500 text-white'
                                   : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-                              }`}
+                                }`}
                             >
                               {page}
                             </button>
@@ -681,11 +674,10 @@ function Report(): JSX.Element {
                       <button
                         onClick={() => setCurrentPage(currentPage + 1)}
                         disabled={currentPage === totalPages}
-                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${
-                          currentPage === totalPages
+                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${currentPage === totalPages
                             ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                             : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-                        }`}
+                          }`}
                       >
                         Next →
                       </button>
