@@ -20,6 +20,7 @@ type DisplayItem = {
   qid: string;
   reportedAt?: number; // Only for completed items
   itemId?: string; // Only for in-progress items (original ToDoItem id)
+  modifiedAt?: number; // Only for in-progress items
 };
 
 function Report(): JSX.Element {
@@ -84,7 +85,8 @@ function Report(): JSX.Element {
               create_time: new Date(item.created_time).toLocaleString(),
               qname: queue.name,
               qid: queue.id,
-              itemId: item.id
+              itemId: item.id,
+              modifiedAt: item.modified_time
             };
             allInProgressItems.push(displayItem);
           }
@@ -113,12 +115,14 @@ function Report(): JSX.Element {
       }
 
       // Convert DisplayItem back to ToDoItem
+      const now = Date.now();
       const todoItem = new ToDoItem(
         item.description,
         item.link,
         `undo-${Date.now()}-${Math.random()}`, // Generate new ID for the restored item
         item.createdAt,
-        item.priorityId
+        item.priorityId,
+        now // Set modified_time to now when undoing
       );
 
       // Add back to the original queue
@@ -262,27 +266,27 @@ function Report(): JSX.Element {
         item.reportedAt && item.reportedAt >= lastWorkDay && item.reportedAt <= today
       );
 
-      // Filter in-progress items by creation time
+      // Filter in-progress items by modification time
       inProgressFiltered = inProgressItems.filter(item => {
-        // Convert created_time timestamp to YYYYMMDD format for comparison
-        const createdDate = new Date(item.createdAt);
-        const createdYYYYMMDD = createdDate.getFullYear() * 10000 +
-          (createdDate.getMonth() + 1) * 100 +
-          createdDate.getDate();
-        return createdYYYYMMDD >= lastWorkDay && createdYYYYMMDD <= today;
+        // Convert modified_time timestamp to YYYYMMDD format for comparison
+        const modifiedDate = new Date(item.modifiedAt || item.createdAt);
+        const modifiedYYYYMMDD = modifiedDate.getFullYear() * 10000 +
+          (modifiedDate.getMonth() + 1) * 100 +
+          modifiedDate.getDate();
+        return modifiedYYYYMMDD >= lastWorkDay && modifiedYYYYMMDD <= today;
       });
     } else if (activeTab === 'today') {
       const today = getTodayTimestamp();
 
       reportItems = reportItems.filter(item => item.reportedAt === today);
 
-      // Filter in-progress items created today
+      // Filter in-progress items modified today
       inProgressFiltered = inProgressItems.filter(item => {
-        const createdDate = new Date(item.createdAt);
-        const createdYYYYMMDD = createdDate.getFullYear() * 10000 +
-          (createdDate.getMonth() + 1) * 100 +
-          createdDate.getDate();
-        return createdYYYYMMDD === today;
+        const modifiedDate = new Date(item.modifiedAt || item.createdAt);
+        const modifiedYYYYMMDD = modifiedDate.getFullYear() * 10000 +
+          (modifiedDate.getMonth() + 1) * 100 +
+          modifiedDate.getDate();
+        return modifiedYYYYMMDD === today;
       });
     } else {
       // 'all' tab - no date filtering for report items, but don't show in-progress in "all"
@@ -369,11 +373,11 @@ function Report(): JSX.Element {
 
     // Count in-progress items
     count += inProgressItems.filter(item => {
-      const createdDate = new Date(item.createdAt);
-      const createdYYYYMMDD = createdDate.getFullYear() * 10000 +
-        (createdDate.getMonth() + 1) * 100 +
-        createdDate.getDate();
-      return createdYYYYMMDD >= lastWorkDay && createdYYYYMMDD <= today;
+      const modifiedDate = new Date(item.modifiedAt || item.createdAt);
+      const modifiedYYYYMMDD = modifiedDate.getFullYear() * 10000 +
+        (modifiedDate.getMonth() + 1) * 100 +
+        modifiedDate.getDate();
+      return modifiedYYYYMMDD >= lastWorkDay && modifiedYYYYMMDD <= today;
     }).length;
 
     return count;
@@ -392,11 +396,11 @@ function Report(): JSX.Element {
 
     // Count in-progress items
     count += inProgressItems.filter(item => {
-      const createdDate = new Date(item.createdAt);
-      const createdYYYYMMDD = createdDate.getFullYear() * 10000 +
-        (createdDate.getMonth() + 1) * 100 +
-        createdDate.getDate();
-      return createdYYYYMMDD === today;
+      const modifiedDate = new Date(item.modifiedAt || item.createdAt);
+      const modifiedYYYYMMDD = modifiedDate.getFullYear() * 10000 +
+        (modifiedDate.getMonth() + 1) * 100 +
+        modifiedDate.getDate();
+      return modifiedYYYYMMDD === today;
     }).length;
 
     return count;
@@ -461,8 +465,8 @@ function Report(): JSX.Element {
               <button
                 onClick={() => handleTabChange('recent')}
                 className={`px-4 py-3 font-medium text-sm transition-all duration-150 border-b-2 ${activeTab === 'recent'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-800'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-800'
                   }`}
               >
                 Since Last Workday ({recentItemsCount})
@@ -470,8 +474,8 @@ function Report(): JSX.Element {
               <button
                 onClick={() => handleTabChange('today')}
                 className={`px-4 py-3 font-medium text-sm transition-all duration-150 border-b-2 ${activeTab === 'today'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-800'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-800'
                   }`}
               >
                 Today ({todayItemsCount})
@@ -479,8 +483,8 @@ function Report(): JSX.Element {
               <button
                 onClick={() => handleTabChange('all')}
                 className={`px-4 py-3 font-medium text-sm transition-all duration-150 border-b-2 ${activeTab === 'all'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-800'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-800'
                   }`}
               >
                 All Items ({report.items.length})
@@ -501,8 +505,8 @@ function Report(): JSX.Element {
                 <button
                   onClick={toggleAllQueues}
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${selectedQueues.size === 0 || selectedQueues.size === uniqueQueues.length
-                      ? 'bg-blue-500 text-white shadow-md'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-blue-500 text-white shadow-md'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                 >
                   {(selectedQueues.size === 0 || selectedQueues.size === uniqueQueues.length) ? '✓ ' : ''}All Queues ({dateFilteredItems.length})
@@ -517,8 +521,8 @@ function Report(): JSX.Element {
                       key={queue}
                       onClick={() => toggleQueue(queue)}
                       className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${isSelected
-                          ? 'bg-blue-500 text-white shadow-md'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-blue-500 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                     >
                       {isSelected ? '✓ ' : ''}{queue} ({count})
@@ -633,8 +637,8 @@ function Report(): JSX.Element {
                         onClick={() => setCurrentPage(currentPage - 1)}
                         disabled={currentPage === 1}
                         className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${currentPage === 1
-                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
                           }`}
                       >
                         ← Previous
@@ -661,8 +665,8 @@ function Report(): JSX.Element {
                               key={page}
                               onClick={() => setCurrentPage(page)}
                               className={`px-3 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${currentPage === page
-                                  ? 'bg-blue-500 text-white'
-                                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
                                 }`}
                             >
                               {page}
@@ -675,8 +679,8 @@ function Report(): JSX.Element {
                         onClick={() => setCurrentPage(currentPage + 1)}
                         disabled={currentPage === totalPages}
                         className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${currentPage === totalPages
-                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
                           }`}
                       >
                         Next →

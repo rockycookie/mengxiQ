@@ -7,7 +7,7 @@ import { ToDoItem } from '../model/ToDoItem';
 import { ReportItem, addReportItemDb, current_report_id } from '../db/ReportJsonServer';
 
 function Queue(
-  props: {qid: string}
+  props: { qid: string }
 ): JSX.Element {
   const [items, setItems] = useState<ToDoItem[]>([]);
   const [curDescription, setCurDescription] = useState<string>('');
@@ -75,26 +75,28 @@ function Queue(
       alert('Please enter a description');
       return;
     }
-    
+
     if (curPriorityId === 'select_priority') {
       alert('Please select a priority');
       return;
     }
 
     const newItems = items.slice();
+    const now = Date.now();
     const newItem = new ToDoItem(
       curDescription,
       curLink,
       uuidv4(),
-      Date.now(),
+      now,
       curPriorityId,
+      now
     );
     newItems.push(newItem);
     newItems.sort(sortAlg);
 
     setItems(newItems);
     addItemDb(props.qid, newItem);
-    
+
     // Reset form
     setCurDescription('');
     setCurLink('');
@@ -144,7 +146,8 @@ function Queue(
           link,
           item.id,
           item.created_time,
-          priorityId
+          priorityId,
+          Date.now()
         );
         updateItemDb(props.qid, updatedItem);
         return updatedItem;
@@ -181,14 +184,14 @@ function Queue(
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-800">Quick Capture</h2>
-          <button 
+          <button
             onClick={() => setShowForm(!showForm)}
             className="text-sm text-gray-600 hover:text-gray-800"
           >
             {showForm ? '▼ Hide' : '▶ Show'}
           </button>
         </div>
-        
+
         {showForm && (
           <div className="space-y-4">
             {/* Priority Selection - Quick Buttons */}
