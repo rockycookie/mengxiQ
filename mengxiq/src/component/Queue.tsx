@@ -23,7 +23,8 @@ function Queue(
     if (cmp !== 0) {
       return cmp;
     } else {
-      return a.created_time - b.created_time;
+      // Sort by most recent modification first
+      return (b.modified_time || b.created_time) - (a.modified_time || a.created_time);
     }
   };
 
