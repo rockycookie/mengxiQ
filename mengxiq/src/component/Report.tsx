@@ -21,6 +21,7 @@ type DisplayItem = {
   reportedAt?: number; // Only for completed items
   itemId?: string; // Only for in-progress items (original ToDoItem id)
   modifiedAt?: number; // Only for in-progress items
+  modified_time?: string; // Only for in-progress items (display format)
 };
 
 function Report(): JSX.Element {
@@ -75,6 +76,7 @@ function Report(): JSX.Element {
           for (const item of fullQueue.items) {
             // Convert ToDoItem to DisplayItem
             const priority = priorityLevelMap.get(item.priorityId);
+            const modifiedTime = item.modified_time || item.created_time;
             const displayItem: DisplayItem = {
               type: 'in-progress',
               description: item.description,
@@ -86,7 +88,8 @@ function Report(): JSX.Element {
               qname: queue.name,
               qid: queue.id,
               itemId: item.id,
-              modifiedAt: item.modified_time
+              modifiedAt: modifiedTime,
+              modified_time: new Date(modifiedTime).toLocaleString()
             };
             allInProgressItems.push(displayItem);
           }
@@ -595,7 +598,7 @@ function Report(): JSX.Element {
                         {/* Metadata */}
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                           <span>
-                            🕒 Created: {item.create_time}
+                            🕒 Updated: {item.type === 'in-progress' ? item.modified_time : item.create_time}
                           </span>
                           {item.type === 'completed' && item.reportedAt && (
                             <span>
