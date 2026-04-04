@@ -4,6 +4,7 @@ export class PriorityQueue {
     public name: string,
     public isDeleted: boolean = false,
     public deletedAt?: number,
-    public displayOrder: number = 0
+    public displayOrder: number = 0,
+    public description: string = ''
   ) { }
 }

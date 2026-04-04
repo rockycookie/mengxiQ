@@ -19,27 +19,28 @@ export async function listDeletedQueuesDb() {
   return queues.filter((q: any) => q.isDeleted);
 }
 
-export async function createQueueDb(qname: string): Promise<any> {
+export async function createQueueDb(qname: string, description: string = ''): Promise<any> {
   // Get current queues to determine the next displayOrder
   const queues = await listQueuesDb(true);
-  const maxOrder = queues.length > 0 
+  const maxOrder = queues.length > 0
     ? Math.max(...queues.map((q: any) => q.displayOrder !== undefined ? q.displayOrder : 0))
     : -1;
-  
+
   const newQueue = {
     id: uuidv4(),
     name: qname,
     items: [],
     isDeleted: false,
     deletedAt: undefined,
-    displayOrder: maxOrder + 1
+    displayOrder: maxOrder + 1,
+    description: description
   };
   await fetch(
     db_url + '/queues/',
     {
       method: 'POST',
       body: JSON.stringify(newQueue),
-      headers: {'Content-Type': 'application/json'},
+      headers: { 'Content-Type': 'application/json' },
     }
   );
   return newQueue;
@@ -63,7 +64,7 @@ export async function addItemDb(qid: string, item: ToDoItem) {
     {
       method: 'PUT',
       body: JSON.stringify(q),
-      headers: {'Content-Type': 'application/json'},
+      headers: { 'Content-Type': 'application/json' },
     }
   );
 }
@@ -81,7 +82,7 @@ export async function deleteItemDb(qid: string, itemId: string) {
     {
       method: 'PUT',
       body: JSON.stringify(q),
-      headers: {'Content-Type': 'application/json'},
+      headers: { 'Content-Type': 'application/json' },
     }
   );
 }
@@ -92,7 +93,7 @@ export async function updateItemDb(qid: string, updatedItem: ToDoItem) {
   if (q.items === null) {
     return;
   } else {
-    q.items = q.items.map((item: any) => 
+    q.items = q.items.map((item: any) =>
       item.id === updatedItem.id ? updatedItem : item
     );
   }
@@ -101,7 +102,7 @@ export async function updateItemDb(qid: string, updatedItem: ToDoItem) {
     {
       method: 'PUT',
       body: JSON.stringify(q),
-      headers: {'Content-Type': 'application/json'},
+      headers: { 'Content-Type': 'application/json' },
     }
   );
 }
@@ -110,16 +111,16 @@ export async function softDeleteQueueDb(qid: string) {
   if (qid === '') { return; }
   const q = await getQueueDb(qid);
   if (!q) { return; }
-  
+
   q.isDeleted = true;
   q.deletedAt = Date.now();
-  
+
   await fetch(
     db_url + '/queues/' + qid,
     {
       method: 'PUT',
       body: JSON.stringify(q),
-      headers: {'Content-Type': 'application/json'},
+      headers: { 'Content-Type': 'application/json' },
     }
   );
 }
@@ -128,28 +129,28 @@ export async function restoreQueueDb(qid: string) {
   if (qid === '') { return; }
   const q = await getQueueDb(qid);
   if (!q) { return; }
-  
+
   q.isDeleted = false;
   q.deletedAt = undefined;
-  
+
   await fetch(
     db_url + '/queues/' + qid,
     {
       method: 'PUT',
       body: JSON.stringify(q),
-      headers: {'Content-Type': 'application/json'},
+      headers: { 'Content-Type': 'application/json' },
     }
   );
 }
 
 export async function permanentDeleteQueueDb(qid: string) {
   if (qid === '') { return; }
-  
+
   await fetch(
     db_url + '/queues/' + qid,
     {
       method: 'DELETE',
-      headers: {'Content-Type': 'application/json'},
+      headers: { 'Content-Type': 'application/json' },
     }
   );
 }
@@ -166,11 +167,33 @@ export async function updateQueueOrderDb(queueIds: string[]) {
         {
           method: 'PUT',
           body: JSON.stringify(queue),
-          headers: {'Content-Type': 'application/json'},
+          headers: { 'Content-Type': 'application/json' },
         }
       );
     }
   });
-  
+
   await Promise.all(updates);
+}
+
+export async function updateQueueDb(qid: string, updates: { name?: string; description?: string }) {
+  if (qid === '') { return; }
+  const q = await getQueueDb(qid);
+  if (!q) { return; }
+
+  if (updates.name !== undefined) {
+    q.name = updates.name;
+  }
+  if (updates.description !== undefined) {
+    q.description = updates.description;
+  }
+
+  await fetch(
+    db_url + '/queues/' + qid,
+    {
+      method: 'PUT',
+      body: JSON.stringify(q),
+      headers: { 'Content-Type': 'application/json' },
+    }
+  );
 }

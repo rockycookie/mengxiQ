@@ -1,8 +1,9 @@
 import QueueItem from './QueueItem';
 import { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { v4 as uuidv4 } from 'uuid';
 import { priorityLevelMap, priorityLevelMapKeys } from '../model/Priority';
-import { addItemDb, deleteItemDb, getQueueDb, updateItemDb } from '../db/JsonServer';
+import { addItemDb, deleteItemDb, getQueueDb, updateItemDb, updateQueueDb } from '../db/JsonServer';
 import { ToDoItem } from '../model/ToDoItem';
 import { ReportItem, addReportItemDb, current_report_id } from '../db/ReportJsonServer';
 
@@ -14,9 +15,13 @@ function Queue(
   const [curLink, setCurLink] = useState('');
   const [curPriorityId, setCurPriorityId] = useState('select_priority');
   const [qname, setQname] = useState<string>('');
+  const [queueDescription, setQueueDescription] = useState<string>('');
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [tempDescription, setTempDescription] = useState<string>('');
   const [showForm, setShowForm] = useState(true);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const queueDescriptionRef = useRef<HTMLTextAreaElement>(null);
 
   const sortAlg = (a: ToDoItem, b: ToDoItem) => {
     let cmp = priorityLevelMap.get(b.priorityId)!.rank - priorityLevelMap.get(a.priorityId)!.rank;
@@ -56,6 +61,7 @@ function Queue(
           result.items.sort(sortAlg);
           setItems(result.items);
           setQname(result.name);
+          setQueueDescription(result.description || '');
         }
       });
   }, [props.qid]);
@@ -70,6 +76,19 @@ function Queue(
   useEffect(() => {
     autoResizeTextarea(descriptionRef.current);
   }, [curDescription]);
+
+  useEffect(() => {
+    autoResizeTextarea(queueDescriptionRef.current);
+  }, [tempDescription]);
+
+  useEffect(() => {
+    if (editingDescription) {
+      // Delay to ensure DOM has rendered
+      setTimeout(() => {
+        autoResizeTextarea(queueDescriptionRef.current);
+      }, 0);
+    }
+  }, [editingDescription]);
 
   function handleAddItem() {
     if (!curDescription.trim()) {
@@ -192,6 +211,22 @@ function Queue(
     return items.filter(item => item.priorityId === pid).length;
   };
 
+  function handleEditDescription() {
+    setTempDescription(queueDescription);
+    setEditingDescription(true);
+  }
+
+  function handleSaveDescription() {
+    updateQueueDb(props.qid, { description: tempDescription });
+    setQueueDescription(tempDescription);
+    setEditingDescription(false);
+  }
+
+  function handleCancelEditDescription() {
+    setTempDescription('');
+    setEditingDescription(false);
+  }
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
       {/* Quick Add Form */}
@@ -259,6 +294,63 @@ function Queue(
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium transition-colors duration-150 shadow-sm"
               >
                 ➕ Add Item
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Queue Header with Description */}
+      <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-md p-6 mb-6 text-white">
+        <h1 className="text-3xl font-bold mb-2">📋 {qname}</h1>
+        {!editingDescription ? (
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              {queueDescription ? (
+                <div className="text-blue-50 text-sm prose prose-sm max-w-none prose-invert">
+                  <ReactMarkdown
+                    components={{
+                      a: ({ node: _node, ...props }) => (
+                        <a {...props} className="text-blue-100 hover:text-white underline" target="_blank" rel="noopener noreferrer" />
+                      )
+                    }}
+                  >
+                    {queueDescription}
+                  </ReactMarkdown>
+                </div>
+              ) : (
+                <p className="text-blue-100 text-sm italic">No description</p>
+              )}
+            </div>
+            <button
+              onClick={handleEditDescription}
+              className="px-3 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 rounded text-sm transition-all duration-150"
+            >
+              ✏️ Edit
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <textarea
+              ref={queueDescriptionRef}
+              value={tempDescription}
+              onChange={e => setTempDescription(e.target.value)}
+              placeholder="Enter queue description..."
+              className="w-full px-3 py-2 border border-white border-opacity-30 rounded bg-white bg-opacity-20 text-white placeholder-blue-100 focus:ring-2 focus:ring-white focus:ring-opacity-50 resize-none overflow-hidden"
+              rows={2}
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleSaveDescription}
+                className="px-4 py-1 bg-white bg-opacity-90 text-blue-600 rounded hover:bg-opacity-100 transition-all duration-150 text-sm font-medium"
+              >
+                ✓ Save
+              </button>
+              <button
+                onClick={handleCancelEditDescription}
+                className="px-4 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 rounded text-sm transition-all duration-150"
+              >
+                ✕ Cancel
               </button>
             </div>
           </div>

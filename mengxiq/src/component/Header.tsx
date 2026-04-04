@@ -13,6 +13,7 @@ function Header(
   const { setQid } = props;
   const navigate = useNavigate();
   const [curCreateQueueName, setCurCreateQueueName] = useState('');
+  const [curCreateQueueDescription, setCurCreateQueueDescription] = useState('');
   const [queues, setQueues] = useState<PriorityQueue[]>([]);
   const [deletedQueues, setDeletedQueues] = useState<PriorityQueue[]>([]);
   const [curDisplayQueueId, setCurDisplayQueueId] = useState<string | null>(null);
@@ -45,7 +46,7 @@ function Header(
       return;
     }
 
-    createQueueDb(curCreateQueueName)
+    createQueueDb(curCreateQueueName, curCreateQueueDescription)
       .then(() => {
         setTriggerRerender(triggerRerender + 1);
         listQueuesDb().then(result => {
@@ -57,6 +58,7 @@ function Header(
           }
         });
         setCurCreateQueueName('');
+        setCurCreateQueueDescription('');
         setShowCreateForm(false);
       });
   }
@@ -183,31 +185,42 @@ function Header(
                 ➕ New Queue
               </button>
             ) : (
-              <div className="flex items-center gap-2 bg-green-50 px-3 py-2 rounded-lg">
-                <input
-                  type="text"
-                  value={curCreateQueueName}
-                  onChange={e => setCurCreateQueueName(e.target.value)}
-                  onKeyPress={e => e.key === 'Enter' && handleQueueCreation()}
-                  placeholder="Queue name..."
-                  className="px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  autoFocus
-                />
-                <button
-                  onClick={handleQueueCreation}
-                  className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors duration-150 text-sm font-medium"
-                >
-                  ✓
-                </button>
-                <button
-                  onClick={() => {
-                    setShowCreateForm(false);
-                    setCurCreateQueueName('');
-                  }}
-                  className="px-3 py-1 bg-gray-400 text-white rounded hover:bg-gray-500 transition-colors duration-150 text-sm font-medium"
-                >
-                  ✕
-                </button>
+              <div className="flex flex-col gap-2 bg-green-50 px-3 py-2 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={curCreateQueueName}
+                    onChange={e => setCurCreateQueueName(e.target.value)}
+                    onKeyPress={e => e.key === 'Enter' && !e.shiftKey && handleQueueCreation()}
+                    placeholder="Queue name..."
+                    className="px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    autoFocus
+                  />
+                  <input
+                    type="text"
+                    value={curCreateQueueDescription}
+                    onChange={e => setCurCreateQueueDescription(e.target.value)}
+                    onKeyPress={e => e.key === 'Enter' && !e.shiftKey && handleQueueCreation()}
+                    placeholder="Description (optional)..."
+                    className="px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent flex-1"
+                  />
+                  <button
+                    onClick={handleQueueCreation}
+                    className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors duration-150 text-sm font-medium"
+                  >
+                    ✓
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowCreateForm(false);
+                      setCurCreateQueueName('');
+                      setCurCreateQueueDescription('');
+                    }}
+                    className="px-3 py-1 bg-gray-400 text-white rounded hover:bg-gray-500 transition-colors duration-150 text-sm font-medium"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
             )}
 
@@ -243,8 +256,8 @@ function Header(
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(queue.id, e)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-t-lg font-medium transition-all duration-150 cursor-move ${curDisplayQueueId === queue.id
-                    ? 'bg-blue-500 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-blue-500 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   } ${dragOverQueueId === queue.id && draggedQueueId !== queue.id
                     ? 'border-2 border-blue-400 border-dashed'
                     : ''
