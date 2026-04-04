@@ -105,6 +105,19 @@ function Queue(
   }
 
   function deleteItem(itemId: string) {
+    // Find the item to get its description
+    const item = items.find(e => e.id === itemId);
+    const itemDescription = item ? item.description : 'this item';
+
+    // Warn user that deletion is not recoverable
+    const confirmed = window.confirm(
+      `⚠️ This item will be permanently deleted and cannot be recovered.\n\nItem: ${itemDescription}\n\nAre you sure you want to delete this item?`
+    );
+
+    if (!confirmed) {
+      return; // User cancelled, don't delete
+    }
+
     // console.log("deleteItem function called with id: " + id);
     const newItems = items.filter(e => e.id !== itemId).slice();
     // console.log("new items: ");
