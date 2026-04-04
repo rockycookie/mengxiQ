@@ -548,8 +548,8 @@ function Report(): JSX.Element {
                   <div key={index} className="p-6 hover:bg-gray-50 transition-colors duration-150">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
-                        {/* Status Badge */}
-                        <div className="mb-2">
+                        {/* Status Badge with Queue Name */}
+                        <div className="mb-2 flex items-center gap-2">
                           {item.type === 'in-progress' ? (
                             <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-md">
                               🔄 IN PROGRESS
@@ -559,6 +559,9 @@ function Report(): JSX.Element {
                               ✅ DONE
                             </span>
                           )}
+                          <span className="px-2 py-1 bg-gray-200 text-gray-700 text-xs font-semibold rounded-md">
+                            📋 {item.qname}
+                          </span>
                         </div>
 
                         {/* Description */}
@@ -572,13 +575,6 @@ function Report(): JSX.Element {
                           >
                             {item.description}
                           </ReactMarkdown>
-                        </div>
-
-                        {/* Queue Info */}
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="text-sm text-gray-600">
-                            📋 Queue: <span className="font-medium">{item.qname}</span>
-                          </span>
                         </div>
 
                         {/* Link */}
