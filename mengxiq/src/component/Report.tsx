@@ -6,6 +6,7 @@ import { priorityLevelMap } from '../model/Priority';
 import { PriorityQueue } from '../model/PriorityQueue';
 import { ToDoItem } from '../model/ToDoItem';
 import { getHostname } from '../utils';
+import SearchReport from './SearchReport';
 
 // Extended type to track in-progress items
 type DisplayItem = {
@@ -30,7 +31,7 @@ function Report(): JSX.Element {
   const [inProgressItems, setInProgressItems] = useState<DisplayItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'all' | 'recent' | 'today'>('recent');
+  const [activeTab, setActiveTab] = useState<'all' | 'recent' | 'today' | 'search'>('recent');
   const [selectedQueues, setSelectedQueues] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -327,7 +328,7 @@ function Report(): JSX.Element {
     return filtered.slice(startIndex, endIndex);
   }
 
-  function handleTabChange(tab: 'all' | 'recent' | 'today') {
+  function handleTabChange(tab: 'all' | 'recent' | 'today' | 'search') {
     setActiveTab(tab);
     setCurrentPage(1); // Reset to first page when switching tabs
   }
@@ -492,205 +493,219 @@ function Report(): JSX.Element {
               >
                 All Items ({report.items.length})
               </button>
+              <button
+                onClick={() => handleTabChange('search')}
+                className={`px-4 py-3 font-medium text-sm transition-all duration-150 border-b-2 ${activeTab === 'search'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-800'
+                  }`}
+              >
+                🔍 Search
+              </button>
             </div>
           </div>
 
-          {/* Queue Filters */}
-          {uniqueQueues.length > 0 && (
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-              <div className="mb-2">
-                <label className="text-sm font-medium text-gray-700">
-                  📋 Filter by Queue:
-                </label>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {/* All Queues Toggle */}
-                <button
-                  onClick={toggleAllQueues}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${selectedQueues.size === 0 || selectedQueues.size === uniqueQueues.length
-                    ? 'bg-blue-500 text-white shadow-md'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                >
-                  {(selectedQueues.size === 0 || selectedQueues.size === uniqueQueues.length) ? '✓ ' : ''}All Queues ({dateFilteredItems.length})
-                </button>
-
-                {/* Individual Queue Cards */}
-                {uniqueQueues.map((queue) => {
-                  const count = dateFilteredItems.filter(item => item.qname === queue).length;
-                  const isSelected = selectedQueues.size > 0 && selectedQueues.has(queue);
-                  return (
-                    <button
-                      key={queue}
-                      onClick={() => toggleQueue(queue)}
-                      className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${isSelected
-                        ? 'bg-blue-500 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                    >
-                      {isSelected ? '✓ ' : ''}{queue} ({count})
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Report Items */}
-          {paginatedItems.length === 0 ? (
-            <div className="p-12 text-center">
-              <p className="text-gray-500 text-lg">No items found for this filter.</p>
-            </div>
+          {/* Search Tab Content */}
+          {activeTab === 'search' ? (
+            <SearchReport />
           ) : (
             <>
-              <div className="divide-y divide-gray-200">
-                {paginatedItems.map((item: DisplayItem, index: number) => (
-                  <div key={index} className="p-6 hover:bg-gray-50 transition-colors duration-150">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        {/* Status Badge with Queue Name */}
-                        <div className="mb-2 flex items-center gap-2">
-                          {item.type === 'in-progress' ? (
-                            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-md">
-                              🔄 IN PROGRESS
-                            </span>
-                          ) : (
-                            <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-md">
-                              ✅ DONE
-                            </span>
-                          )}
-                          <span className="px-2 py-1 bg-gray-200 text-gray-700 text-xs font-semibold rounded-md">
-                            📋 {item.qname}
-                          </span>
-                        </div>
-
-                        {/* Description */}
-                        <div className="text-lg text-gray-800 mb-2 prose prose-base max-w-none">
-                          <ReactMarkdown
-                            components={{
-                              a: ({ node: _node, ...props }) => (
-                                <a {...props} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer" />
-                              )
-                            }}
-                          >
-                            {item.description}
-                          </ReactMarkdown>
-                        </div>
-
-                        {/* Link */}
-                        {item.link && (
-                          <div className="mb-3">
-                            <a
-                              href={item.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 underline text-sm break-all"
-                            >
-                              🔗 Ref Link: {getHostname(item.link)}
-                            </a>
-                          </div>
-                        )}
-
-                        {/* Metadata */}
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                          <span>
-                            🕒 Updated: {item.type === 'in-progress' ? item.modified_time : item.create_time}
-                          </span>
-                          {item.type === 'completed' && item.reportedAt && (
-                            <span>
-                              📅 Reported: {formatDate(item.reportedAt)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Priority Badge and Undo Button */}
-                      <div className="flex-shrink-0 flex flex-col gap-2 items-end">
-                        <div className={`px-4 py-2 rounded-lg border-2 ${getPriorityColor(item.priority)} font-semibold text-sm text-center min-w-[100px]`}>
-                          {item.priority}
-                        </div>
-                        {item.type === 'completed' && (
-                          <button
-                            onClick={() => undoReportItem(item)}
-                            className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-150 font-medium text-sm"
-                            title="Return item back to queue"
-                          >
-                            ↩️ Undo
-                          </button>
-                        )}
-                      </div>
-                    </div>
+              {/* Queue Filters */}
+              {uniqueQueues.length > 0 && (
+                <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                  <div className="mb-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      📋 Filter by Queue:
+                    </label>
                   </div>
-                ))}
-              </div>
+                  <div className="flex flex-wrap gap-2">
+                    {/* All Queues Toggle */}
+                    <button
+                      onClick={toggleAllQueues}
+                      className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${selectedQueues.size === 0 || selectedQueues.size === uniqueQueues.length
+                        ? 'bg-blue-500 text-white shadow-md'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                    >
+                      {(selectedQueues.size === 0 || selectedQueues.size === uniqueQueues.length) ? '✓ ' : ''}All Queues ({dateFilteredItems.length})
+                    </button>
 
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-600">
-                      Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredItems.length)} of {filteredItems.length} items
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setCurrentPage(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${currentPage === 1
-                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                          : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-                          }`}
-                      >
-                        ← Previous
-                      </button>
-
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                          // Show first page, last page, current page, and pages around current
-                          const showPage = page === 1 ||
-                            page === totalPages ||
-                            (page >= currentPage - 1 && page <= currentPage + 1);
-
-                          const showEllipsis = (page === currentPage - 2 && currentPage > 3) ||
-                            (page === currentPage + 2 && currentPage < totalPages - 2);
-
-                          if (showEllipsis) {
-                            return <span key={page} className="px-2 text-gray-400">...</span>;
-                          }
-
-                          if (!showPage) return null;
-
-                          return (
-                            <button
-                              key={page}
-                              onClick={() => setCurrentPage(page)}
-                              className={`px-3 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${currentPage === page
-                                ? 'bg-blue-500 text-white'
-                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-                                }`}
-                            >
-                              {page}
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      <button
-                        onClick={() => setCurrentPage(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${currentPage === totalPages
-                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                          : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-                          }`}
-                      >
-                        Next →
-                      </button>
-                    </div>
+                    {/* Individual Queue Cards */}
+                    {uniqueQueues.map((queue) => {
+                      const count = dateFilteredItems.filter(item => item.qname === queue).length;
+                      const isSelected = selectedQueues.size > 0 && selectedQueues.has(queue);
+                      return (
+                        <button
+                          key={queue}
+                          onClick={() => toggleQueue(queue)}
+                          className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${isSelected
+                            ? 'bg-blue-500 text-white shadow-md'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                        >
+                          {isSelected ? '✓ ' : ''}{queue} ({count})
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
-            </>
-          )}
-        </div>
+
+              {/* Report Items */}
+              {paginatedItems.length === 0 ? (
+                <div className="p-12 text-center">
+                  <p className="text-gray-500 text-lg">No items found for this filter.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="divide-y divide-gray-200">
+                    {paginatedItems.map((item: DisplayItem, index: number) => (
+                      <div key={index} className="p-6 hover:bg-gray-50 transition-colors duration-150">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            {/* Status Badge with Queue Name */}
+                            <div className="mb-2 flex items-center gap-2">
+                              {item.type === 'in-progress' ? (
+                                <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-md">
+                                  🔄 IN PROGRESS
+                                </span>
+                              ) : (
+                                <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-md">
+                                  ✅ DONE
+                                </span>
+                              )}
+                              <span className="px-2 py-1 bg-gray-200 text-gray-700 text-xs font-semibold rounded-md">
+                                📋 {item.qname}
+                              </span>
+                            </div>
+
+                            {/* Description */}
+                            <div className="text-lg text-gray-800 mb-2 prose prose-base max-w-none">
+                              <ReactMarkdown
+                                components={{
+                                  a: ({ node: _node, ...props }) => (
+                                    <a {...props} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer" />
+                                  )
+                                }}
+                              >
+                                {item.description}
+                              </ReactMarkdown>
+                            </div>
+
+                            {/* Link */}
+                            {item.link && (
+                              <div className="mb-3">
+                                <a
+                                  href={item.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 underline text-sm break-all"
+                                >
+                                  🔗 Ref Link: {getHostname(item.link)}
+                                </a>
+                              </div>
+                            )}
+
+                            {/* Metadata */}
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                              <span>
+                                🕒 Updated: {item.type === 'in-progress' ? item.modified_time : item.create_time}
+                              </span>
+                              {item.type === 'completed' && item.reportedAt && (
+                                <span>
+                                  📅 Reported: {formatDate(item.reportedAt)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Priority Badge and Undo Button */}
+                          <div className="flex-shrink-0 flex flex-col gap-2 items-end">
+                            <div className={`px-4 py-2 rounded-lg border-2 ${getPriorityColor(item.priority)} font-semibold text-sm text-center min-w-[100px]`}>
+                              {item.priority}
+                            </div>
+                            {item.type === 'completed' && (
+                              <button
+                                onClick={() => undoReportItem(item)}
+                                className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-150 font-medium text-sm"
+                                title="Return item back to queue"
+                              >
+                                ↩️ Undo
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm text-gray-600">
+                          Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredItems.length)} of {filteredItems.length} items
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setCurrentPage(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${currentPage === 1
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                              }`}
+                          >
+                            ← Previous
+                          </button>
+
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                              // Show first page, last page, current page, and pages around current
+                              const showPage = page === 1 ||
+                                page === totalPages ||
+                                (page >= currentPage - 1 && page <= currentPage + 1);
+
+                              const showEllipsis = (page === currentPage - 2 && currentPage > 3) ||
+                                (page === currentPage + 2 && currentPage < totalPages - 2);
+
+                              if (showEllipsis) {
+                                return <span key={page} className="px-2 text-gray-400">...</span>;
+                              }
+
+                              if (!showPage) return null;
+
+                              return (
+                                <button
+                                  key={page}
+                                  onClick={() => setCurrentPage(page)}
+                                  className={`px-3 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${currentPage === page
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                                    }`}
+                                >
+                                  {page}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          <button
+                            onClick={() => setCurrentPage(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${currentPage === totalPages
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                              }`}
+                          >
+                            Next →
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}            </>
+          )}        </div>
       </div>
     </div>
   );
