@@ -8,7 +8,7 @@ import { ToDoItem } from '../model/ToDoItem';
 import { ReportItem, addReportItemDb, current_report_id } from '../db/ReportJsonServer';
 
 function Queue(
-  props: { qid: string }
+  props: { qid: string, queueReloadTrigger: number }
 ): JSX.Element {
   const [items, setItems] = useState<ToDoItem[]>([]);
   const [curDescription, setCurDescription] = useState<string>('');
@@ -64,7 +64,7 @@ function Queue(
           setQueueDescription(result.description || '');
         }
       });
-  }, [props.qid]);
+  }, [props.qid, props.queueReloadTrigger]);
 
   const autoResizeTextarea = (textarea: HTMLTextAreaElement | null) => {
     if (textarea) {
@@ -301,61 +301,58 @@ function Queue(
       </div>
 
       {/* Queue Header with Description */}
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-md p-6 mb-6 text-white">
-        <h1 className="text-3xl font-bold mb-2">📋 {qname}</h1>
-        {!editingDescription ? (
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              {queueDescription ? (
-                <div className="text-blue-50 text-sm prose prose-sm max-w-none prose-invert">
+      {(queueDescription || editingDescription) && (
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg shadow-md p-6 mb-6">
+          {!editingDescription ? (
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <div className="text-gray-700 text-sm prose prose-sm max-w-none">
                   <ReactMarkdown
                     components={{
                       a: ({ node: _node, ...props }) => (
-                        <a {...props} className="text-blue-100 hover:text-white underline" target="_blank" rel="noopener noreferrer" />
+                        <a {...props} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer" />
                       )
                     }}
                   >
                     {queueDescription}
                   </ReactMarkdown>
                 </div>
-              ) : (
-                <p className="text-blue-100 text-sm italic">No description</p>
-              )}
-            </div>
-            <button
-              onClick={handleEditDescription}
-              className="px-3 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 rounded text-sm transition-all duration-150"
-            >
-              ✏️ Edit
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <textarea
-              ref={queueDescriptionRef}
-              value={tempDescription}
-              onChange={e => setTempDescription(e.target.value)}
-              placeholder="Enter queue description..."
-              className="w-full px-3 py-2 border border-white border-opacity-30 rounded bg-white bg-opacity-20 text-white placeholder-blue-100 focus:ring-2 focus:ring-white focus:ring-opacity-50 resize-none overflow-hidden"
-              rows={2}
-            />
-            <div className="flex gap-2">
+              </div>
               <button
-                onClick={handleSaveDescription}
-                className="px-4 py-1 bg-white bg-opacity-90 text-blue-600 rounded hover:bg-opacity-100 transition-all duration-150 text-sm font-medium"
+                onClick={handleEditDescription}
+                className="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-sm transition-all duration-150"
               >
-                ✓ Save
-              </button>
-              <button
-                onClick={handleCancelEditDescription}
-                className="px-4 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 rounded text-sm transition-all duration-150"
-              >
-                ✕ Cancel
+                ✏️ Edit
               </button>
             </div>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="space-y-2">
+              <textarea
+                ref={queueDescriptionRef}
+                value={tempDescription}
+                onChange={e => setTempDescription(e.target.value)}
+                placeholder="Enter queue description..."
+                className="w-full px-3 py-2 border border-blue-300 rounded bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden"
+                rows={2}
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveDescription}
+                  className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-all duration-150 text-sm font-medium"
+                >
+                  ✓ Save
+                </button>
+                <button
+                  onClick={handleCancelEditDescription}
+                  className="px-4 py-1 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded text-sm transition-all duration-150"
+                >
+                  ✕ Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Items Summary */}
       <div className="mb-4 flex justify-between items-center">

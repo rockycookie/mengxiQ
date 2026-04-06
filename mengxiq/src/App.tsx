@@ -7,22 +7,22 @@ import DeletedQueuesHeader from './component/DeletedQueuesHeader';
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 
-function AppContent({ qid, setQid }: { qid: string | undefined, setQid: (id: string) => void }) {
+function AppContent({ qid, setQid, queueReloadTrigger, triggerQueueReload }: { qid: string | undefined, setQid: (id: string) => void, queueReloadTrigger: number, triggerQueueReload: () => void }) {
   const location = useLocation();
-  
+
   const getHeader = () => {
     if (location.pathname === '/report') return <ReportHeader />;
     if (location.pathname === '/deleted') return <DeletedQueuesHeader />;
-    return <Header setQid={setQid} />;
+    return <Header setQid={setQid} triggerQueueReload={triggerQueueReload} />;
   };
-  
+
   return (
     <>
       {getHeader()}
       <Routes>
         <Route path="/" element={
           qid ? (
-            <Body qid={qid}/>
+            <Body qid={qid} queueReloadTrigger={queueReloadTrigger} />
           ) : (
             <div className="max-w-6xl mx-auto px-4 py-12 text-center">
               <div className="bg-white rounded-lg shadow-md p-12">
@@ -41,7 +41,12 @@ function AppContent({ qid, setQid }: { qid: string | undefined, setQid: (id: str
 
 function App() {
   const [qid, setQid] = useState<string>();
-  
+  const [queueReloadTrigger, setQueueReloadTrigger] = useState(0);
+
+  const triggerQueueReload = () => {
+    setQueueReloadTrigger(prev => prev + 1);
+  };
+
   useEffect(() => {
     console.log('qid updated to: ' + qid);
   }, [qid]);
@@ -49,7 +54,7 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
-        <AppContent qid={qid} setQid={setQid} />
+        <AppContent qid={qid} setQid={setQid} queueReloadTrigger={queueReloadTrigger} triggerQueueReload={triggerQueueReload} />
       </div>
     </Router>
   );

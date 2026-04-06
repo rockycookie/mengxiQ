@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createQueueDb, listQueuesDb, softDeleteQueueDb, listDeletedQueuesDb, updateQueueOrderDb } from '../db/JsonServer';
+import { createQueueDb, listQueuesDb, softDeleteQueueDb, listDeletedQueuesDb, updateQueueOrderDb, updateQueueDb } from '../db/JsonServer';
 import { PriorityQueue } from '../model/PriorityQueue';
 import packageJson from '../../package.json';
 
 function Header(
   props: {
-    setQid: (id: string) => void
+    setQid: (id: string) => void,
+    triggerQueueReload: () => void
   }
 ): JSX.Element {
 
-  const { setQid } = props;
+  const { setQid, triggerQueueReload } = props;
   const navigate = useNavigate();
   const [curCreateQueueName, setCurCreateQueueName] = useState('');
   const [curCreateQueueDescription, setCurCreateQueueDescription] = useState('');
@@ -21,6 +22,9 @@ function Header(
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [draggedQueueId, setDraggedQueueId] = useState<string | null>(null);
   const [dragOverQueueId, setDragOverQueueId] = useState<string | null>(null);
+  const [editingQueueId, setEditingQueueId] = useState<string | null>(null);
+  const [editQueueName, setEditQueueName] = useState('');
+  const [editQueueDescription, setEditQueueDescription] = useState('');
 
   useEffect(() => {
     listQueuesDb().then(result => {
@@ -154,6 +158,39 @@ function Header(
     setDraggedQueueId(null);
   }
 
+  function handleEditQueue(qid: string, qname: string, qdescription: string, event: React.MouseEvent) {
+    event.stopPropagation();
+    setEditingQueueId(qid);
+    setEditQueueName(qname);
+    setEditQueueDescription(qdescription || '');
+  }
+
+  function handleSaveQueueEdit() {
+    if (!editQueueName.trim()) {
+      alert('Queue name cannot be empty');
+      return;
+    }
+
+    if (editingQueueId) {
+      updateQueueDb(editingQueueId, {
+        name: editQueueName,
+        description: editQueueDescription
+      }).then(() => {
+        setTriggerRerender(triggerRerender + 1);
+        triggerQueueReload();
+        setEditingQueueId(null);
+        setEditQueueName('');
+        setEditQueueDescription('');
+      });
+    }
+  }
+
+  function handleCancelQueueEdit() {
+    setEditingQueueId(null);
+    setEditQueueName('');
+    setEditQueueDescription('');
+  }
+
   return (
     <div className="bg-white shadow-md border-b border-gray-200">
       <div className="max-w-6xl mx-auto px-4">
@@ -270,8 +307,16 @@ function Header(
                   {queue.name}
                 </button>
                 <button
+                  onClick={(e) => handleEditQueue(queue.id, queue.name, queue.description || '', e)}
+                  className={`text-xs hover:opacity-70 transition-opacity ${curDisplayQueueId === queue.id ? 'text-white' : 'text-blue-600'
+                    }`}
+                  title="Edit queue"
+                >
+                  ✏️
+                </button>
+                <button
                   onClick={(e) => handleDeleteQueue(queue.id, queue.name, e)}
-                  className={`ml-2 text-xs hover:opacity-70 transition-opacity ${curDisplayQueueId === queue.id ? 'text-white' : 'text-red-600'
+                  className={`text-xs hover:opacity-70 transition-opacity ${curDisplayQueueId === queue.id ? 'text-white' : 'text-red-600'
                     }`}
                   title="Delete queue"
                 >
@@ -280,6 +325,53 @@ function Header(
               </div>
             ))}
           </div>
+
+          {/* Edit Queue Modal */}
+          {editingQueueId && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleCancelQueueEdit}>
+              <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4" onClick={(e) => e.stopPropagation()}>
+                <h2 className="text-xl font-bold text-gray-800 mb-4">Edit Queue</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Queue Name</label>
+                    <input
+                      type="text"
+                      value={editQueueName}
+                      onChange={e => setEditQueueName(e.target.value)}
+                      onKeyPress={e => e.key === 'Enter' && !e.shiftKey && handleSaveQueueEdit()}
+                      placeholder="Queue name..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      autoFocus
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Description (optional)</label>
+                    <textarea
+                      value={editQueueDescription}
+                      onChange={e => setEditQueueDescription(e.target.value)}
+                      placeholder="Queue description..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      rows={3}
+                    />
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      onClick={handleCancelQueueEdit}
+                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors duration-150 font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveQueueEdit}
+                      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-150 font-medium"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
