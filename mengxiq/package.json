@@ -27,7 +27,8 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build:local": "BUILD_PATH=mgq-local REACT_APP_API_HOSTNAME=localhost react-scripts build",
+    "build:raspberrypi": "BUILD_PATH=mgq-raspberrypi REACT_APP_API_HOSTNAME=raspberrypi.local react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint src --ext .ts,.tsx",

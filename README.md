@@ -5,7 +5,29 @@ The principle is to **prioritize, record and forget quickly**, which minimizes t
 
 The UI is done by React TypeScript. NodeJS JSON Server is used as a REST backend, which is more than enough for the currently single-user scenario~
 
-## How to run
+## To run locally
+### 1. Build
+```
+cd mengxiq   ## from the root of this project
+nvm use v21.1.0
+
+npm run build:local
+```
+
+### 2. Run
+```
+cd deploy   ## from the root of this project
+
+nvm use v21.1.0
+npm install pm2@latest -g
+
+pm2 start pm2-local.config.js
+```
+
+## To deploy/run on RaspberryPi
+- [Deploy RaspberryPi](./deploy/DEPLOY_RASPBERRYPI.md)
+
+## How to run as dev
 ### 0. Setup
 ```
 nvm use v21.1.0
@@ -30,17 +52,9 @@ npx json-server --watch ./json_server/real_db/work2024.json --port 8002
 npx json-server --watch ./json_server/real_db/report2024.json --port 8001
 ```
 
-### 3. Configure API hostname (optional)
-The app uses `raspberrypi.local` by default. For local development:
+### 3. Spin up the React app
 ```
 cd mengxiq
-cp .env.local.example .env.local
-# Edit .env.local to set JSON_SERVER_HOSTNAME=localhost
-```
-
-### 4. Spin up the React app
-```
-cd mengxiq
-npm run build
+npm run build:local
 npx http-server build -p 3019 -a localhost
 ```

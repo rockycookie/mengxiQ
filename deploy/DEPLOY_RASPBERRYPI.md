@@ -3,6 +3,7 @@
 ## Prerequisites
 1. Install PM2 globally on RaspberryPi:
 ```bash
+nvm use v21.1.0
 npm install -g pm2
 ```
 
@@ -11,18 +12,17 @@ npm install -g pm2
 1. **Build the React app** (from your Mac)
    ```bash
    cd mengxiq
-   # The app is configured to use raspberrypi.local by default
-   # To use a different hostname, create .env.local and set JSON_SERVER_HOSTNAME
-   npm run build
+   npm run build:raspberrypi
    cd ..
    ```
 
 2. **Transfer files to RaspberryPi**
    ```bash
-   scp ecosystem.config.js admin@raspberrypi.local:/home/admin/workspace/
-   scp life2026.json admin@raspberrypi.local:/home/admin/workspace/
-   scp report2026.json admin@raspberrypi.local:/home/admin/workspace/
-   scp -r mengxiq/build/* admin@raspberrypi.local:/home/admin/workspace/mengxiq1.9.1/
+   scp life2026.json admin@raspberrypi.local:/home/admin/workspace/mengxiq
+   scp report2026.json admin@raspberrypi.local:/home/admin/workspace/mengxiq
+
+   scp deploy/pm2-raspberrypi.config.js admin@raspberrypi.local:/home/admin/workspace/mengxiq
+   scp -r mengxiq/mgq-raspberrypi admin@raspberrypi.local:/home/admin/workspace/mengxiq/mgq-raspberrypi
    ```
 
 3. **SSH into RaspberryPi**
@@ -34,13 +34,13 @@ npm install -g pm2
 4. **Start all services**
    ```bash
    cd /home/admin/workspace
-   pm2 start ecosystem.config.js
+   pm2 start pm2-raspberrypi.config.js
    ```
 
 ## Accessing the App
 
 Once deployed, access the app at:
-- `http://raspberrypi.local:3019/` (may not work in Chrome)
+- `http://raspberrypi.local:3019/`
 - `http://<raspberrypi-ip>:3019/` (more reliable, e.g., `http://10.0.0.151:3019/`)
 
 To find the RaspberryPi IP: `hostname -I` on the Pi, or check `pm2 logs mengxiq-app`
@@ -120,5 +120,5 @@ kill -9 $(lsof -t -i:3019)
 ### Reset PM2
 ```bash
 pm2 kill
-pm2 start ecosystem.config.js
+pm2 start pm2-raspberrypi.config.js
 ```

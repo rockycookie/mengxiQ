@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'life2026-db-local',
       script: 'npx',
-      args: 'json-server@0.17.4 --watch ../json_server/real_db/work2024.json --port 8002 --host 127.0.0.1',
+      args: 'json-server@0.17.4 --watch /Users/i519210/SAPDevelop/mengxi-personal/mengxiQ/json_server/real_db/work2024.json --port 8002 --host 127.0.0.1',
       cwd: __dirname,
       exec_mode: 'fork',
       instances: 1,
@@ -17,7 +17,7 @@ module.exports = {
     {
       name: 'report2026-db-local',
       script: 'npx',
-      args: 'json-server@0.17.4 --watch ../json_server/real_db/report2024.json --port 8001 --host 127.0.0.1',
+      args: 'json-server@0.17.4 --watch /Users/i519210/SAPDevelop/mengxi-personal/mengxiQ/json_server/real_db/report2024.json --port 8001 --host 127.0.0.1',
       cwd: __dirname,
       exec_mode: 'fork',
       instances: 1,
@@ -31,7 +31,7 @@ module.exports = {
     {
       name: 'mengxiq-app-local',
       script: 'npx',
-      args: 'http-server ../mengxiq/build -p 3019 -a 127.0.0.1',
+      args: 'http-server /Users/i519210/SAPDevelop/mengxi-personal/mengxiQ/mengxiq/mgq-local -p 3019 -a 127.0.0.1',
       cwd: __dirname,
       exec_mode: 'fork',
       instances: 1,
@@ -39,7 +39,7 @@ module.exports = {
       watch: false,
       max_memory_restart: '100M',
       env: {
-        NODE_ENV: 'development',
+        NODE_ENV: 'development'
       }
     }
   ]
