@@ -5,29 +5,28 @@ The principle is to **prioritize, record and forget quickly**, which minimizes t
 
 The UI is done by React TypeScript. NodeJS JSON Server is used as a REST backend, which is more than enough for the currently single-user scenario~
 
+## To deploy/run on RaspberryPi
+- [Deploy RaspberryPi](./deploy/DEPLOY_RASPBERRYPI.md)
+
 ## To run locally
 ### 1. Build
 ```
-cd mengxiq   ## from the root of this project
 nvm use v21.1.0
+cd mengxiq   ## from the root of this project
 
 npm run build:local
 ```
 
 ### 2. Run
 ```
-cd deploy   ## from the root of this project
-
 nvm use v21.1.0
 npm install pm2@latest -g
 
+cd deploy   ## from the root of this project
 pm2 start pm2-local.config.js
 ```
 
-## To deploy/run on RaspberryPi
-- [Deploy RaspberryPi](./deploy/DEPLOY_RASPBERRYPI.md)
-
-## How to run as dev
+## To run as dev
 ### 0. Setup
 ```
 nvm use v21.1.0

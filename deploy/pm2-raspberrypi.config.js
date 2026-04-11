@@ -3,8 +3,8 @@ module.exports = {
     {
       name: 'life2026-db',
       script: 'npx',
-      args: 'json-server@0.17.4 --watch /home/admin11/workspace/mengxiq/life2026.json --port 8002 --host 0.0.0.0',
-      cwd: '/home/admin11/workspace',
+      args: 'json-server@0.17.4 --watch life2026.json --port 8002 --host 0.0.0.0',
+      cwd: __dirname,
       exec_mode: 'fork',
       instances: 1,
       autorestart: true,
@@ -17,8 +17,8 @@ module.exports = {
     {
       name: 'report2026-db',
       script: 'npx',
-      args: 'json-server@0.17.4 --watch /home/admin11/workspace/mengxiq/report2026.json --port 8001 --host 0.0.0.0',
-      cwd: '/home/admin11/workspace',
+      args: 'json-server@0.17.4 --watch report2026.json --port 8001 --host 0.0.0.0',
+      cwd: __dirname,
       exec_mode: 'fork',
       instances: 1,
       autorestart: true,
@@ -31,8 +31,8 @@ module.exports = {
     {
       name: 'mengxiq-app',
       script: 'npx',
-      args: 'http-server /home/admin11/workspace/mgq-raspberrypi -p 3019 -a 0.0.0.0',
-      cwd: '/home/admin11/workspace',
+      args: 'http-server mgq-raspberrypi -p 3019 -a 0.0.0.0',
+      cwd: __dirname,
       exec_mode: 'fork',
       instances: 1,
       autorestart: true,
