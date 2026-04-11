@@ -35,7 +35,7 @@ The app uses `raspberrypi.local` by default. For local development:
 ```
 cd mengxiq
 cp .env.local.example .env.local
-# Edit .env.local to set REACT_APP_API_HOSTNAME=localhost
+# Edit .env.local to set JSON_SERVER_HOSTNAME=localhost
 ```
 
 ### 4. Spin up the React app
@@ -44,17 +44,3 @@ cd mengxiq
 npm run build
 npx http-server build -p 3019 -a localhost
 ```
-
-## Deploy to RaspberryPi
-
-1. Access to RaspberryPi
-    ```
-    ssh-keygen -R raspberrypi.local
-
-    ssh admin@raspberrypi.local
-    ```
-2. Move NodeJS build to it
-    ```
-    scp -r mengxiq1.9.1 admin@raspberrypi.local:/home/admin11/workspace
-    ```
-3. Get JSON files ready

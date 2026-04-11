@@ -12,7 +12,7 @@ npm install -g pm2
    ```bash
    cd mengxiq
    # The app is configured to use raspberrypi.local by default
-   # To use a different hostname, create .env.local and set REACT_APP_API_HOSTNAME
+   # To use a different hostname, create .env.local and set JSON_SERVER_HOSTNAME
    npm run build
    cd ..
    ```
