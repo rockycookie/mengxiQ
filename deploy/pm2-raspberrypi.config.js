@@ -41,6 +41,20 @@ module.exports = {
       env: {
         NODE_ENV: 'production'
       }
+    },
+    {
+      name: 'meilisearch',
+      script: 'meilisearch',
+      args: '--db-path /home/admin11/workspace/meilisearch/data --http-addr 0.0.0.0:8011',
+      cwd: __dirname,
+      exec_mode: 'fork',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '200M',
+      env: {
+        NODE_ENV: 'production'
+      }
     }
   ]
 };

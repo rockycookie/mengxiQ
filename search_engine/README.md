@@ -2,6 +2,10 @@
 
 For lightweight search engine, Meilisearch is the best choice.
 
+## Instructions
+
+### 
+
 ## Tradeoffs
 - ElasticSearch
     - https://www.elastic.co/docs/deploy-manage/deploy/self-managed/install-elasticsearch-with-docker

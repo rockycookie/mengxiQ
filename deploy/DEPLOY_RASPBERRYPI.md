@@ -33,7 +33,7 @@ npm install -g pm2
 
 4. **Start all services**
    ```bash
-   cd /home/admin/workspace
+   cd /home/admin/workspace/mengxiq
    pm2 start pm2-raspberrypi.config.js
    ```
 

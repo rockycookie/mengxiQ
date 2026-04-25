@@ -41,6 +41,20 @@ module.exports = {
       env: {
         NODE_ENV: 'development'
       }
+    },
+    {
+      name: 'meilisearch-local',
+      script: 'meilisearch',
+      args: '--db-path ../search_engine/real_search_engine --http-addr 127.0.0.1:8011',
+      cwd: __dirname,
+      exec_mode: 'fork',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '200M',
+      env: {
+        NODE_ENV: 'development'
+      }
     }
   ]
 };

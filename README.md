@@ -10,7 +10,7 @@ The UI is done by React TypeScript. NodeJS JSON Server is used as a REST backend
 
 ## To run locally
 ### 1. Build
-```
+```sh
 nvm use v21.1.0
 cd mengxiq   ## from the root of this project
 
@@ -18,7 +18,7 @@ npm run build:local
 ```
 
 ### 2. Run
-```
+```sh
 nvm use v21.1.0
 npm install pm2@latest -g
 
@@ -28,31 +28,48 @@ pm2 start pm2-local.config.js
 
 ## To run as dev
 ### 0. Setup
-```
+```sh
 nvm use v21.1.0
 ```
 
 ### 1. Create new db if needed
-Simply create a JSON file in `./json_server/real_db` with content:
-```
+Simply create JSON files in `./json_server/real_db` with content:
+```json
+// task queue
 {
     "queues": []
 }
+
+// report
+{
+    "reports": [
+        {
+            "id": "7ce7c617-82ab-4fa0-8cfd-051c02751862",
+            "name": "Current Report",
+            "items": []
+        }
+    ]
+}
 ```
-for example `./json_server/real_db/work2024.json`
+for example `./json_server/real_db/work2024.json`, `./json_server/real_db/report2024.json`
 
 ### 2. Spin up the db
 - Queue Items db
-```
+```sh
 npx json-server --watch ./json_server/real_db/work2024.json --port 8002
 ```
 - Report db
-```
+```sh
 npx json-server --watch ./json_server/real_db/report2024.json --port 8001
 ```
 
-### 3. Spin up the React app
+### 3. Spin up the full-text search engine
+```sh
+meilisearch --db-path ./search_engine/real_db --http-addr 127.0.0.1:8011
 ```
+
+### 4. Spin up the React app
+```sh
 cd mengxiq
 npm run build:local
 npx http-server build -p 3019 -a localhost
