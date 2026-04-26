@@ -16,6 +16,7 @@ type SearchableItem = {
     create_time: string;
     qname: string;
     qid: string;
+    id: string; // ID from ReportItem or ToDoItem (always required)
     reportedAt?: number; // Only for completed items
     itemId?: string; // Only for in-progress items (original ToDoItem id)
     modifiedAt?: number; // Only for in-progress items
@@ -52,7 +53,8 @@ function SearchReport(): JSX.Element {
                     create_time: item.create_time,
                     qname: item.qname,
                     qid: item.qid,
-                    reportedAt: item.reportedAt
+                    reportedAt: item.reportedAt,
+                    id: item.id
                 }));
                 items.push(...completedItems);
             }
@@ -75,6 +77,7 @@ function SearchReport(): JSX.Element {
                             create_time: new Date(item.created_time).toLocaleString(),
                             qname: queue.name,
                             qid: queue.id,
+                            id: item.id,
                             itemId: item.id,
                             modifiedAt: modifiedTime,
                             modified_time: new Date(modifiedTime).toLocaleString()

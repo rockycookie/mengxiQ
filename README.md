@@ -72,5 +72,5 @@ meilisearch --db-path ./search_engine/real_db --http-addr 127.0.0.1:8011
 ```sh
 cd mengxiq
 npm run build:local
-npx http-server build -p 3019 -a localhost
+npx http-server build -p 3009 -a localhost
 ```

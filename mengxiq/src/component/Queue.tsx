@@ -164,6 +164,7 @@ function Queue(
         new Date(item.created_time).toLocaleString(),
         qname,
         props.qid,
+        item.id, // Assign task id to report id
       ),
       sortReportAlg
     );

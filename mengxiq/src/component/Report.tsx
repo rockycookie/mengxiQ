@@ -19,6 +19,7 @@ type DisplayItem = {
   create_time: string;
   qname: string;
   qid: string;
+  id: string; // ID from ReportItem or ToDoItem (always required)
   reportedAt?: number; // Only for completed items
   itemId?: string; // Only for in-progress items (original ToDoItem id)
   modifiedAt?: number; // Only for in-progress items
@@ -88,6 +89,7 @@ function Report(): JSX.Element {
               create_time: new Date(item.created_time).toLocaleString(),
               qname: queue.name,
               qid: queue.id,
+              id: item.id,
               itemId: item.id,
               modifiedAt: modifiedTime,
               modified_time: new Date(modifiedTime).toLocaleString()
@@ -123,7 +125,7 @@ function Report(): JSX.Element {
       const todoItem = new ToDoItem(
         item.description,
         item.link,
-        `undo-${Date.now()}-${Math.random()}`, // Generate new ID for the restored item
+        item.id!, // Use report id (always expect it to exist)
         item.createdAt,
         item.priorityId,
         now // Set modified_time to now when undoing
@@ -142,7 +144,8 @@ function Report(): JSX.Element {
         create_time: item.create_time,
         qname: item.qname,
         qid: item.qid,
-        reportedAt: item.reportedAt
+        reportedAt: item.reportedAt,
+        id: item.id!
       };
       await removeReportItemDb(current_report_id, reportItem);
 
@@ -249,7 +252,8 @@ function Report(): JSX.Element {
       create_time: item.create_time,
       qname: item.qname,
       qid: item.qid,
-      reportedAt: item.reportedAt
+      reportedAt: item.reportedAt,
+      id: item.id
     };
   }
 
