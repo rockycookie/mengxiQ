@@ -5,31 +5,14 @@ import { listQueuesDb, addItemDb, getQueueDb } from '../db/JsonServer';
 import { priorityLevelMap } from '../model/Priority';
 import { PriorityQueue } from '../model/PriorityQueue';
 import { ToDoItem } from '../model/ToDoItem';
+import { ReportDisplayItem } from '../model/ReportDisplayItem';
 import { getHostname } from '../utils';
-import SearchReport from './SearchReport';
-
-// Extended type to track in-progress items
-type DisplayItem = {
-  type: 'completed' | 'in-progress';
-  description: string;
-  link: string;
-  priorityId: string;
-  priority: string;
-  createdAt: number;
-  create_time: string;
-  qname: string;
-  qid: string;
-  id: string; // ID from ReportItem or ToDoItem (always required)
-  reportedAt?: number; // Only for completed items
-  itemId?: string; // Only for in-progress items (original ToDoItem id)
-  modifiedAt?: number; // Only for in-progress items
-  modified_time?: string; // Only for in-progress items (display format)
-};
+import FullTextSearch from './FullTextSearch';
 
 function Report(): JSX.Element {
   const [report, setReport] = useState<ReportType | null>(null);
   const [queues, setQueues] = useState<PriorityQueue[]>([]);
-  const [inProgressItems, setInProgressItems] = useState<DisplayItem[]>([]);
+  const [inProgressItems, setInProgressItems] = useState<ReportDisplayItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'recent' | 'today' | 'search'>('recent');
@@ -69,7 +52,7 @@ function Report(): JSX.Element {
   async function loadInProgressItems() {
     try {
       const queuesData = await listQueuesDb();
-      const allInProgressItems: DisplayItem[] = [];
+      const allInProgressItems: ReportDisplayItem[] = [];
 
       // Iterate through all queues and their items
       for (const queue of queuesData) {
@@ -79,7 +62,7 @@ function Report(): JSX.Element {
             // Convert ToDoItem to DisplayItem
             const priority = priorityLevelMap.get(item.priorityId);
             const modifiedTime = item.modified_time || item.created_time;
-            const displayItem: DisplayItem = {
+            const displayItem: ReportDisplayItem = {
               type: 'in-progress',
               description: item.description,
               link: item.link,
@@ -105,7 +88,7 @@ function Report(): JSX.Element {
     }
   }
 
-  async function undoReportItem(item: DisplayItem) {
+  async function undoReportItem(item: ReportDisplayItem) {
     // Only completed items can be undone
     if (item.type !== 'completed' || !item.reportedAt) {
       return;
@@ -241,7 +224,7 @@ function Report(): JSX.Element {
     return [...orderedQueues, ...deletedQueues];
   }
 
-  function convertReportItemToDisplayItem(item: ReportItem): DisplayItem {
+  function convertReportItemToDisplayItem(item: ReportItem): ReportDisplayItem {
     return {
       type: 'completed',
       description: item.description,
@@ -257,9 +240,9 @@ function Report(): JSX.Element {
     };
   }
 
-  function getDateFilteredItems(): DisplayItem[] {
-    let reportItems: DisplayItem[] = [];
-    let inProgressFiltered: DisplayItem[] = [];
+  function getDateFilteredItems(): ReportDisplayItem[] {
+    let reportItems: ReportDisplayItem[] = [];
+    let inProgressFiltered: ReportDisplayItem[] = [];
 
     if (report && report.items) {
       reportItems = report.items.map(convertReportItemToDisplayItem);
@@ -304,7 +287,7 @@ function Report(): JSX.Element {
     return [...reportItems, ...inProgressFiltered];
   }
 
-  function getFilteredItems(): DisplayItem[] {
+  function getFilteredItems(): ReportDisplayItem[] {
     let filtered = getDateFilteredItems();
 
     // Apply queue filter
@@ -323,7 +306,7 @@ function Report(): JSX.Element {
     });
   }
 
-  function getPaginatedItems(): DisplayItem[] {
+  function getPaginatedItems(): ReportDisplayItem[] {
     const filtered = getFilteredItems();
 
     // Apply pagination to all tabs
@@ -504,14 +487,14 @@ function Report(): JSX.Element {
                   : 'border-transparent text-gray-600 hover:text-gray-800'
                   }`}
               >
-                🔍 Search
+                🔍 Full-Text Search
               </button>
             </div>
           </div>
 
           {/* Search Tab Content */}
           {activeTab === 'search' ? (
-            <SearchReport />
+            <FullTextSearch />
           ) : (
             <>
               {/* Queue Filters */}
@@ -563,10 +546,10 @@ function Report(): JSX.Element {
               ) : (
                 <>
                   <div className="divide-y divide-gray-200">
-                    {paginatedItems.map((item: DisplayItem, index: number) => (
+                    {paginatedItems.map((item: ReportDisplayItem, index: number) => (
                       <div key={index} className="p-6 hover:bg-gray-50 transition-colors duration-150">
                         <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
+                          <div className="flex-1 min-w-0">
                             {/* Status Badge with Queue Name */}
                             <div className="mb-2 flex items-center gap-2">
                               {item.type === 'in-progress' ? (
@@ -584,11 +567,17 @@ function Report(): JSX.Element {
                             </div>
 
                             {/* Description */}
-                            <div className="text-lg text-gray-800 mb-2 prose prose-base max-w-none">
+                            <div className="text-lg text-gray-800 mb-2 prose prose-base max-w-full overflow-x-auto">
                               <ReactMarkdown
                                 components={{
                                   a: ({ node: _node, ...props }) => (
                                     <a {...props} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer" />
+                                  ),
+                                  code: ({ node: _node, ...props }) => (
+                                    <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono break-all max-w-full inline-block" />
+                                  ),
+                                  pre: ({ node: _node, ...props }) => (
+                                    <pre {...props} className="bg-gray-100 p-3 rounded overflow-x-auto my-2 whitespace-pre max-w-full" />
                                   )
                                 }}
                               >

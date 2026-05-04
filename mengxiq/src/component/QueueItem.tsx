@@ -144,12 +144,18 @@ function QueueItem(
   return (
     <div className={`bg-white shadow-md rounded-lg p-4 mb-3 border-l-4 ${borderColor.split(' ')[0]} hover:shadow-lg transition-shadow duration-200`}>
       <div className="flex justify-between items-start gap-4">
-        <div className="flex-1">
-          <div className="text-gray-800 mb-2 prose prose-base max-w-none">
+        <div className="flex-1 min-w-0">
+          <div className="text-gray-800 mb-2 prose prose-base max-w-full overflow-x-auto">
             <ReactMarkdown
               components={{
                 a: ({ node: _node, ...props }) => (
                   <a {...props} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer" />
+                ),
+                code: ({ node: _node, ...props }) => (
+                  <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono break-all max-w-full inline-block" />
+                ),
+                pre: ({ node: _node, ...props }) => (
+                  <pre {...props} className="bg-gray-100 p-3 rounded overflow-x-auto my-2 whitespace-pre max-w-full" />
                 )
               }}
             >
