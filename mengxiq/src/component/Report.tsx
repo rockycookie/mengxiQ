@@ -549,7 +549,7 @@ function Report(): JSX.Element {
                     {paginatedItems.map((item: ReportDisplayItem, index: number) => (
                       <div key={index} className="p-6 hover:bg-gray-50 transition-colors duration-150">
                         <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
+                          <div className="flex-1 min-w-0">
                             {/* Status Badge with Queue Name */}
                             <div className="mb-2 flex items-center gap-2">
                               {item.type === 'in-progress' ? (
@@ -567,11 +567,17 @@ function Report(): JSX.Element {
                             </div>
 
                             {/* Description */}
-                            <div className="text-lg text-gray-800 mb-2 prose prose-base max-w-none">
+                            <div className="text-lg text-gray-800 mb-2 prose prose-base max-w-full overflow-x-auto">
                               <ReactMarkdown
                                 components={{
                                   a: ({ node: _node, ...props }) => (
                                     <a {...props} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer" />
+                                  ),
+                                  code: ({ node: _node, ...props }) => (
+                                    <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono break-all max-w-full inline-block" />
+                                  ),
+                                  pre: ({ node: _node, ...props }) => (
+                                    <pre {...props} className="bg-gray-100 p-3 rounded overflow-x-auto my-2 whitespace-pre max-w-full" />
                                   )
                                 }}
                               >
