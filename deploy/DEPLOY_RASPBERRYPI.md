@@ -24,6 +24,7 @@ npm install -g pm2
    scp deploy/pm2-raspberrypi.config.js admin@raspberrypi.local:/home/admin/workspace/mengxiq
    scp -r mengxiq/mgq-raspberrypi admin@raspberrypi.local:/home/admin/workspace/mengxiq/mgq-raspberrypi
    ```
+   - note, I needed to delete the folder before scp the new one `admin@raspberrypi:~/workspace/mengxiq $ rm -rf mgq-raspberrypi`; otherwise it kept running the older version
 
 3. **SSH into RaspberryPi**
    ```bash
