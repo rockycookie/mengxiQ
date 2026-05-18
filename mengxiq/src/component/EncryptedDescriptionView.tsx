@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { hasSessionPassphrase, decryptText } from '../utils/encryption';
+import { hasSessionPassphrase, decryptText, getHintFromEncrypted } from '../utils/encryption';
 
 type RevealState = 'hidden' | 'loading' | 'revealed' | 'error';
 
@@ -8,6 +8,7 @@ function EncryptedDescriptionView({ encryptedText }: { encryptedText: string }):
   const [state, setState] = useState<RevealState>('hidden');
   const [decryptedText, setDecryptedText] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const hint = getHintFromEncrypted(encryptedText);
 
   useEffect(() => {
     function onPassphraseSet() {
@@ -45,7 +46,9 @@ function EncryptedDescriptionView({ encryptedText }: { encryptedText: string }):
         className="cursor-pointer flex items-center gap-2 text-gray-400 italic hover:text-gray-600 transition-colors duration-150 select-none py-1"
       >
         <span>🔒</span>
-        <span className="text-sm">Encrypted — click to reveal</span>
+        <span className="text-sm">
+          Encrypted{hint ? <> · <span className="not-italic font-medium text-gray-500">{hint}</span></> : ''} — click to reveal
+        </span>
       </div>
     );
   }
@@ -63,6 +66,7 @@ function EncryptedDescriptionView({ encryptedText }: { encryptedText: string }):
     return (
       <div className="flex items-center gap-2 py-1">
         <span>🔒</span>
+        {hint && <span className="text-xs font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">{hint}</span>}
         <span className="text-sm text-red-600">{errorMsg}</span>
         <button
           onClick={() => setState('hidden')}

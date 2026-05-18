@@ -1,10 +1,25 @@
-import { useState } from 'react';
-import { hasSessionPassphrase, setSessionPassphrase, clearSessionPassphrase } from '../utils/encryption';
+import { useState, useEffect } from 'react';
+import { hasSessionPassphrase, setSessionPassphrase, clearSessionPassphrase, getSessionPassphrase, getPassphraseHint, setSessionHint, getSessionHint } from '../utils/encryption';
 
 function PassphraseButton(): JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
   const [passphraseSet, setPassphraseSet] = useState(hasSessionPassphrase());
   const [inputValue, setInputValue] = useState('');
+  const [hintInput, setHintInput] = useState('');
+  const [autoHintPreview, setAutoHintPreview] = useState<string | null>(null);
+  const [hint, setHint] = useState<string | null>(null);
+
+  useEffect(() => {
+    const existing = getSessionPassphrase();
+    if (existing) {
+      const stored = getSessionHint();
+      if (stored) {
+        setHint(stored);
+      } else {
+        getPassphraseHint(existing).then(setHint);
+      }
+    }
+  }, []);
 
   function handleSet() {
     if (!inputValue.trim()) {
@@ -12,15 +27,25 @@ function PassphraseButton(): JSX.Element {
       return;
     }
     setSessionPassphrase(inputValue);
-    setPassphraseSet(true);
-    setInputValue('');
-    setIsOpen(false);
-    window.dispatchEvent(new CustomEvent('mengxiq:passphraseSet'));
+    const finalHint = hintInput.trim() || autoHintPreview || '';
+    setSessionHint(finalHint);
+    getPassphraseHint(inputValue).then(h => {
+      setHint(hintInput.trim() || h);
+      setPassphraseSet(true);
+      setInputValue('');
+      setHintInput('');
+      setAutoHintPreview(null);
+      setIsOpen(false);
+      window.dispatchEvent(new CustomEvent('mengxiq:passphraseSet'));
+    });
   }
 
   function handleClear() {
     clearSessionPassphrase();
     setPassphraseSet(false);
+    setHint(null);
+    setAutoHintPreview(null);
+    setHintInput('');
     setIsOpen(false);
   }
 
@@ -35,7 +60,10 @@ function PassphraseButton(): JSX.Element {
             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
         }`}
       >
-        {passphraseSet ? '🔓 Passphrase' : '🔒 Passphrase'}
+        {passphraseSet
+          ? <>🔓 {hint ? <span className="font-semibold">{hint}</span> : 'Passphrase'}</>
+          : '🔒 Passphrase'
+        }
       </button>
 
       {isOpen && (
@@ -49,7 +77,12 @@ function PassphraseButton(): JSX.Element {
 
           {passphraseSet ? (
             <div>
-              <p className="text-sm text-green-700 font-medium mb-3">🔓 Passphrase is active this session</p>
+              <p className="text-sm text-green-700 font-medium mb-1">🔓 Passphrase is active this session</p>
+              {hint && (
+                <p className="text-xs text-gray-500 mb-3">
+                  Hint: <span className="font-semibold text-gray-700">{hint}</span>
+                </p>
+              )}
               <button
                 onClick={handleClear}
                 className="w-full px-3 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-md text-sm font-medium transition-colors duration-150"
@@ -64,12 +97,34 @@ function PassphraseButton(): JSX.Element {
               <input
                 type="password"
                 value={inputValue}
-                onChange={e => setInputValue(e.target.value)}
+                onChange={e => {
+                  setInputValue(e.target.value);
+                  if (e.target.value.trim()) {
+                    getPassphraseHint(e.target.value).then(setAutoHintPreview);
+                  } else {
+                    setAutoHintPreview(null);
+                  }
+                }}
                 onKeyDown={e => e.key === 'Enter' && handleSet()}
                 placeholder="Enter passphrase..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 autoFocus
               />
+              <div>
+                <input
+                  type="text"
+                  value={hintInput}
+                  onChange={e => setHintInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSet()}
+                  placeholder={autoHintPreview ? `Auto: ${autoHintPreview}` : 'Custom hint (optional)...'}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                {autoHintPreview && !hintInput.trim() && (
+                  <p className="text-xs text-gray-400 mt-1 pl-1">
+                    Leave blank to use auto-hint: <span className="font-medium text-gray-600">{autoHintPreview}</span>
+                  </p>
+                )}
+              </div>
               <button
                 onClick={handleSet}
                 className="w-full px-3 py-2 bg-blue-500 text-white hover:bg-blue-600 rounded-md text-sm font-medium transition-colors duration-150"
