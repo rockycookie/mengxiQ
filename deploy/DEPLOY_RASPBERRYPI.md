@@ -123,3 +123,40 @@ kill -9 $(lsof -t -i:3019)
 pm2 kill
 pm2 start pm2-raspberrypi.config.js
 ```
+
+## Enabling HTTPS (required for encryption feature)
+
+The client-side encryption feature (`crypto.subtle`) only works in secure contexts (HTTPS or `localhost`). To enable it over LAN:
+
+### 1. Generate a self-signed certificate (on the Pi)
+```bash
+mkdir -p /home/admin/workspace/mengxiq/certs
+cd /home/admin/workspace/mengxiq/certs
+
+openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 3650 -nodes \
+  -subj "/CN=raspberrypi.local" \
+  -addext "subjectAltName=IP:$(hostname -I | awk '{print $1}'),DNS:raspberrypi.local"
+```
+
+### 2. Update `pm2-raspberrypi.config.js`
+Change the `mengxiq-app` args to add SSL flags:
+```js
+args: 'http-server mgq-raspberrypi -p 3019 -a 0.0.0.0 --ssl --cert certs/cert.pem --key certs/key.pem',
+```
+
+### 3. Restart the app
+```bash
+pm2 delete mengxiq-app
+pm2 start pm2-raspberrypi.config.js
+pm2 save
+```
+
+### 4. Accept the cert in your browser
+Open `https://raspberrypi.local:3019` → browser shows a security warning → click **Advanced → Proceed** (Chrome) or **Accept the Risk** (Firefox). Only needed once per browser.
+
+### Optional — trust the cert permanently on Mac (skip the browser warning)
+```bash
+# Copy cert from Pi to Mac
+scp admin@raspberrypi.local:/home/admin/workspace/mengxiq/certs/cert.pem ~/Downloads/raspberrypi-cert.pem
+```
+Then on Mac: open **Keychain Access** → drag `raspberrypi-cert.pem` in → double-click it → **Trust → Always Trust**.
