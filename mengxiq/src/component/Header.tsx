@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createQueueDb, listQueuesDb, softDeleteQueueDb, listDeletedQueuesDb, updateQueueOrderDb, updateQueueDb } from '../db/JsonServer';
 import { PriorityQueue } from '../model/PriorityQueue';
 import packageJson from '../../package.json';
+import PassphraseButton from './PassphraseButton';
 
 function Header(
   props: {
@@ -268,6 +269,9 @@ function Header(
             >
               📊 Reports
             </button>
+
+            {/* Passphrase Button */}
+            <PassphraseButton />
 
             {/* Deleted Queues Button */}
             {deletedQueues.length > 0 && (

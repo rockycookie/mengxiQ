@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { priorityLevelMap, priorityLevelMapKeys } from '../model/Priority';
 import { getHostname } from '../utils';
+import { isEncryptedFormat, hasSessionPassphrase, decryptText, encryptText } from '../utils/encryption';
+import EncryptedDescriptionView from './EncryptedDescriptionView';
 
 function QueueItem(
   props: {
@@ -19,6 +21,9 @@ function QueueItem(
   const [editDescription, setEditDescription] = useState(props.description);
   const [editLink, setEditLink] = useState(props.link);
   const [editPriorityId, setEditPriorityId] = useState(props.priorityId);
+  const [encryptOnSave, setEncryptOnSave] = useState(isEncryptedFormat(props.description));
+  const [decryptError, setDecryptError] = useState<string | null>(null);
+  const [isDecrypting, setIsDecrypting] = useState(false);
   const editDescriptionRef = useRef<HTMLTextAreaElement>(null);
 
   // Get priority styling
@@ -49,18 +54,60 @@ function QueueItem(
     }
   }, [editDescription, props.isEditing]);
 
-  const handleSave = () => {
+  useEffect(() => {
+    if (props.isEditing) {
+      const isEnc = isEncryptedFormat(props.description);
+      setEncryptOnSave(isEnc);
+      setDecryptError(null);
+      if (isEnc) {
+        if (hasSessionPassphrase()) {
+          setIsDecrypting(true);
+          decryptText(props.description)
+            .then(plaintext => {
+              setEditDescription(plaintext);
+              setIsDecrypting(false);
+            })
+            .catch(() => {
+              setDecryptError('Wrong passphrase — cannot decrypt this item.');
+              setIsDecrypting(false);
+            });
+        } else {
+          setDecryptError('Set a passphrase first (🔒 Passphrase button in header)');
+        }
+      } else {
+        setEditDescription(props.description);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.isEditing]);
+
+  const handleSave = async () => {
     if (!editDescription.trim()) {
       alert('Description cannot be empty');
       return;
     }
-    props.onSaveEdit(editDescription, editLink, editPriorityId);
+    let descToSave = editDescription;
+    if (encryptOnSave) {
+      if (!hasSessionPassphrase()) {
+        alert('Set a passphrase first to encrypt this item (🔒 Passphrase button in header)');
+        return;
+      }
+      try {
+        descToSave = await encryptText(editDescription);
+      } catch (e) {
+        alert('Failed to encrypt. Please try again.');
+        return;
+      }
+    }
+    props.onSaveEdit(descToSave, editLink, editPriorityId);
   };
 
   const handleCancel = () => {
     setEditDescription(props.description);
     setEditLink(props.link);
     setEditPriorityId(props.priorityId);
+    setDecryptError(null);
+    setIsDecrypting(false);
     props.onCancelEdit();
   };
 
@@ -73,13 +120,32 @@ function QueueItem(
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea
-              ref={editDescriptionRef}
-              value={editDescription}
-              onChange={e => setEditDescription(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden"
-              rows={4}
-            />
+            {isDecrypting ? (
+              <div className="text-sm text-gray-400 italic py-2">🔒 Decrypting...</div>
+            ) : decryptError ? (
+              <div className="text-sm text-red-600 py-2">🔒 {decryptError}</div>
+            ) : (
+              <textarea
+                ref={editDescriptionRef}
+                value={editDescription}
+                onChange={e => setEditDescription(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden"
+                rows={4}
+              />
+            )}
+          </div>
+
+          {/* Encrypt on save toggle */}
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-2 cursor-pointer select-none text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={encryptOnSave}
+                onChange={e => setEncryptOnSave(e.target.checked)}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              🔒 Encrypt on save
+            </label>
           </div>
 
           {/* Link */}
@@ -124,7 +190,8 @@ function QueueItem(
           <div className="flex gap-2">
             <button
               onClick={handleSave}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors duration-150 text-sm font-medium"
+              disabled={isDecrypting || (!!decryptError)}
+              className="bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-md transition-colors duration-150 text-sm font-medium"
             >
               💾 Save
             </button>
@@ -146,21 +213,25 @@ function QueueItem(
       <div className="flex justify-between items-start gap-4">
         <div className="flex-1 min-w-0">
           <div className="text-gray-800 mb-2 prose prose-base max-w-full overflow-x-auto">
-            <ReactMarkdown
-              components={{
-                a: ({ node: _node, ...props }) => (
-                  <a {...props} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer" />
-                ),
-                code: ({ node: _node, ...props }) => (
-                  <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono break-all max-w-full inline-block" />
-                ),
-                pre: ({ node: _node, ...props }) => (
-                  <pre {...props} className="bg-gray-100 p-3 rounded overflow-x-auto my-2 whitespace-pre max-w-full" />
-                )
-              }}
-            >
-              {props.description}
-            </ReactMarkdown>
+            {isEncryptedFormat(props.description) ? (
+              <EncryptedDescriptionView encryptedText={props.description} />
+            ) : (
+              <ReactMarkdown
+                components={{
+                  a: ({ node: _node, ...props }) => (
+                    <a {...props} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer" />
+                  ),
+                  code: ({ node: _node, ...props }) => (
+                    <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono break-all max-w-full inline-block" />
+                  ),
+                  pre: ({ node: _node, ...props }) => (
+                    <pre {...props} className="bg-gray-100 p-3 rounded overflow-x-auto my-2 whitespace-pre max-w-full" />
+                  )
+                }}
+              >
+                {props.description}
+              </ReactMarkdown>
+            )}
           </div>
           {props.link && (
             <a
