@@ -6,6 +6,7 @@ import { priorityLevelMap, priorityLevelMapKeys } from '../model/Priority';
 import { addItemDb, deleteItemDb, getQueueDb, updateItemDb, updateQueueDb } from '../db/JsonServer';
 import { ToDoItem } from '../model/ToDoItem';
 import { ReportItem, addReportItemDb, current_report_id } from '../db/ReportJsonServer';
+import { hasSessionPassphrase, encryptText } from '../utils/encryption';
 
 function Queue(
   props: { qid: string, queueReloadTrigger: number }
@@ -20,6 +21,7 @@ function Queue(
   const [tempDescription, setTempDescription] = useState<string>('');
   const [showForm, setShowForm] = useState(true);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [encryptNewItem, setEncryptNewItem] = useState(false);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const queueDescriptionRef = useRef<HTMLTextAreaElement>(null);
 
@@ -101,26 +103,46 @@ function Queue(
       return;
     }
 
-    const newItems = items.slice();
-    const now = Date.now();
-    const newItem = new ToDoItem(
-      curDescription,
-      curLink,
-      uuidv4(),
-      now,
-      curPriorityId,
-      now
-    );
-    newItems.push(newItem);
-    newItems.sort(sortAlg);
+    if (encryptNewItem && !hasSessionPassphrase()) {
+      alert('Set a passphrase first (🔒 Passphrase button in the header)');
+      return;
+    }
 
-    setItems(newItems);
-    addItemDb(props.qid, newItem);
+    const doAdd = async () => {
+      let descriptionToSave = curDescription;
+      if (encryptNewItem) {
+        try {
+          descriptionToSave = await encryptText(curDescription);
+        } catch (e) {
+          alert('Failed to encrypt. Please try again.');
+          return;
+        }
+      }
 
-    // Reset form
-    setCurDescription('');
-    setCurLink('');
-    setCurPriorityId('select_priority');
+      const newItems = items.slice();
+      const now = Date.now();
+      const newItem = new ToDoItem(
+        descriptionToSave,
+        curLink,
+        uuidv4(),
+        now,
+        curPriorityId,
+        now
+      );
+      newItems.push(newItem);
+      newItems.sort(sortAlg);
+
+      setItems(newItems);
+      addItemDb(props.qid, newItem);
+
+      // Reset form
+      setCurDescription('');
+      setCurLink('');
+      setCurPriorityId('select_priority');
+      setEncryptNewItem(false);
+    };
+
+    doAdd();
   }
 
   function deleteItem(itemId: string) {
@@ -286,6 +308,21 @@ function Queue(
                 placeholder="https://..."
                 className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+            </div>
+
+            {/* Encrypt Toggle */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setEncryptNewItem(!encryptNewItem)}
+                className={`px-3 py-2 rounded-md border-2 font-medium text-sm transition-all duration-150 ${
+                  encryptNewItem
+                    ? 'bg-gray-800 text-white border-gray-900'
+                    : 'bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100'
+                }`}
+              >
+                {encryptNewItem ? '🔒 Encrypt on add' : '🔓 No encryption'}
+              </button>
             </div>
 
             {/* Action Buttons */}

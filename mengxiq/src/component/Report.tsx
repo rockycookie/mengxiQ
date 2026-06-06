@@ -8,6 +8,8 @@ import { ToDoItem } from '../model/ToDoItem';
 import { ReportDisplayItem } from '../model/ReportDisplayItem';
 import { getHostname } from '../utils';
 import FullTextSearch from './FullTextSearch';
+import { isEncryptedFormat } from '../utils/encryption';
+import EncryptedDescriptionView from './EncryptedDescriptionView';
 
 function Report(): JSX.Element {
   const [report, setReport] = useState<ReportType | null>(null);
@@ -568,21 +570,25 @@ function Report(): JSX.Element {
 
                             {/* Description */}
                             <div className="text-lg text-gray-800 mb-2 prose prose-base max-w-full overflow-x-auto">
-                              <ReactMarkdown
-                                components={{
-                                  a: ({ node: _node, ...props }) => (
-                                    <a {...props} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer" />
-                                  ),
-                                  code: ({ node: _node, ...props }) => (
-                                    <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono break-all max-w-full inline-block" />
-                                  ),
-                                  pre: ({ node: _node, ...props }) => (
-                                    <pre {...props} className="bg-gray-100 p-3 rounded overflow-x-auto my-2 whitespace-pre max-w-full" />
-                                  )
-                                }}
-                              >
-                                {item.description}
-                              </ReactMarkdown>
+                              {isEncryptedFormat(item.description) ? (
+                                <EncryptedDescriptionView encryptedText={item.description} />
+                              ) : (
+                                <ReactMarkdown
+                                  components={{
+                                    a: ({ node: _node, ...props }) => (
+                                      <a {...props} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer" />
+                                    ),
+                                    code: ({ node: _node, ...props }) => (
+                                      <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono break-all max-w-full inline-block" />
+                                    ),
+                                    pre: ({ node: _node, ...props }) => (
+                                      <pre {...props} className="bg-gray-100 p-3 rounded overflow-x-auto my-2 whitespace-pre max-w-full" />
+                                    )
+                                  }}
+                                >
+                                  {item.description}
+                                </ReactMarkdown>
+                              )}
                             </div>
 
                             {/* Link */}

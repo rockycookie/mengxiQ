@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import packageJson from '../../package.json';
+import PassphraseButton from './PassphraseButton';
 
 function ReportHeader(): JSX.Element {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ function ReportHeader(): JSX.Element {
             >
               ← Back to Queues
             </button>
+            <PassphraseButton />
           </div>
         </div>
       </div>
