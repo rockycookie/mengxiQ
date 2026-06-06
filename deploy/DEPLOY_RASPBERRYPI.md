@@ -27,34 +27,32 @@ sudo systemctl stop nginx
 
 2. **Transfer files to RaspberryPi**
    ```bash
-   scp life2026.json admin@raspberrypi.local:/home/admin/workspace/mengxiq
-   scp report2026.json admin@raspberrypi.local:/home/admin/workspace/mengxiq
+   scp life2026.json admin11@raspberrypi.local:/home/admin11/workspace/mengxiq
+   scp report2026.json admin11@raspberrypi.local:/home/admin11/workspace/mengxiq
 
-   scp deploy/pm2-raspberrypi.config.js admin@raspberrypi.local:/home/admin/workspace/mengxiq
-   scp deploy/nginx.conf admin@raspberrypi.local:/home/admin/workspace/mengxiq
-   scp -r mengxiq/mgq-raspberrypi admin@raspberrypi.local:/home/admin/workspace/mengxiq/mgq-raspberrypi
+   scp deploy/pm2-raspberrypi.config.js admin11@raspberrypi.local:/home/admin11/workspace/mengxiq
+   scp deploy/nginx.conf admin11@raspberrypi.local:/home/admin11/workspace/mengxiq
+   scp -r mengxiq/mgq-raspberrypi admin11@raspberrypi.local:/home/admin11/workspace/mengxiq/mgq-raspberrypi
    ```
-   - note, I needed to delete the folder before scp the new one `admin@raspberrypi:~/workspace/mengxiq $ rm -rf mgq-raspberrypi`; otherwise it kept running the older version
+   - note, I needed to delete the folder before scp the new one `admin11@raspberrypi:~/workspace/mengxiq $ rm -rf mgq-raspberrypi`; otherwise it kept running the older version
 
 3. **SSH into RaspberryPi**
    ```bash
    ssh-keygen -R raspberrypi.local
-   ssh admin@raspberrypi.local
+   ssh admin11@raspberrypi.local
    ```
 
 4. **Start all services**
    ```bash
-   cd /home/admin/workspace/mengxiq
+   cd /home/admin11/workspace/mengxiq
    pm2 start pm2-raspberrypi.config.js
    ```
 
 ## Accessing the App
 
 Once deployed, access the app at:
-- `https://raspberrypi.local/`
-- `https://<raspberrypi-ip>/` (more reliable, e.g., `https://10.0.0.151/`)
-
-Nginx listens on port 443 (standard HTTPS) — no port number needed in the URL.
+- `https://raspberrypi.local:3019/`
+- `https://<raspberrypi-ip>:3019/` (more reliable, e.g., `https://10.0.0.151:3019/`)
 
 To find the RaspberryPi IP: `hostname -I` on the Pi, or check `pm2 logs mengxiq-app`
 

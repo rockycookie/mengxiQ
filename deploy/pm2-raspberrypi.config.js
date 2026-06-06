@@ -44,7 +44,7 @@ module.exports = {
     {
       name: 'mengxiq-app',
       script: 'npx',
-      args: 'http-server mgq-raspberrypi -p 3019 -a 127.0.0.1',
+      args: 'http-server mgq-raspberrypi -p 3018 -a 127.0.0.1',
       cwd: __dirname,
       exec_mode: 'fork',
       instances: 1,
