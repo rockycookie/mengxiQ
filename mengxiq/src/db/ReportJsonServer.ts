@@ -1,7 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 
 const API_HOSTNAME = process.env.REACT_APP_API_HOSTNAME || 'raspberrypi.local';
-const db_url = `http://${API_HOSTNAME}:8001`;
+const API_PORT = process.env.REACT_APP_API_PORT ? `:${process.env.REACT_APP_API_PORT}` : '';
+const db_url = `https://${API_HOSTNAME}${API_PORT}/api/report`;
 
 export const current_report_id = '7ce7c617-82ab-4fa0-8cfd-051c02751862';
 

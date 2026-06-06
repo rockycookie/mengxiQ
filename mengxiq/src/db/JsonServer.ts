@@ -2,7 +2,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { ToDoItem } from '../model/ToDoItem';
 
 const API_HOSTNAME = process.env.REACT_APP_API_HOSTNAME || 'raspberrypi.local';
-const db_url = `http://${API_HOSTNAME}:8002`;
+const API_PORT = process.env.REACT_APP_API_PORT ? `:${process.env.REACT_APP_API_PORT}` : '';
+const db_url = `https://${API_HOSTNAME}${API_PORT}/api/db`;
 
 export async function listQueuesDb(includeDeleted: boolean = false) {
   const queues = await (await fetch(db_url + '/queues/')).json();

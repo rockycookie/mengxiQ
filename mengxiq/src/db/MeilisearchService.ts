@@ -1,7 +1,8 @@
 import { Meilisearch } from 'meilisearch';
 
-const SEARCH_HOSTNAME = process.env.REACT_APP_API_HOSTNAME || 'localhost';
-const SEARCH_URL = `http://${SEARCH_HOSTNAME}:8011`;
+const SEARCH_HOSTNAME = process.env.REACT_APP_API_HOSTNAME || 'raspberrypi.local';
+const API_PORT = process.env.REACT_APP_API_PORT ? `:${process.env.REACT_APP_API_PORT}` : '';
+const SEARCH_URL = `https://${SEARCH_HOSTNAME}${API_PORT}/api/search`;
 const INDEX_NAME = 'search-report';
 
 // Initialize Meilisearch client
