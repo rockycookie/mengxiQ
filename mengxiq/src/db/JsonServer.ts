@@ -3,7 +3,13 @@ import { ToDoItem } from '../model/ToDoItem';
 
 const API_HOSTNAME = process.env.REACT_APP_API_HOSTNAME || 'raspberrypi.local';
 const API_PORT = process.env.REACT_APP_API_PORT ? `:${process.env.REACT_APP_API_PORT}` : '';
-const db_url = `https://${API_HOSTNAME}${API_PORT}/api/db`;
+const PROTOCOL = process.env.REACT_APP_API_PROTOCOL || 'https';
+// NOTE: React's build process only inlines env vars prefixed with REACT_APP_.
+// Plain process.env.USE_PROXY would always be undefined at runtime.
+const USE_PROXY = process.env.REACT_APP_USE_PROXY !== 'false';
+const db_url = USE_PROXY
+  ? `${PROTOCOL}://${API_HOSTNAME}${API_PORT}/api/db`
+  : 'http://127.0.0.1:8002';
 
 export async function listQueuesDb(includeDeleted: boolean = false) {
   const queues = await (await fetch(db_url + '/queues/')).json();

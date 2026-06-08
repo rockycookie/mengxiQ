@@ -2,7 +2,13 @@ import { v4 as uuidv4 } from 'uuid';
 
 const API_HOSTNAME = process.env.REACT_APP_API_HOSTNAME || 'raspberrypi.local';
 const API_PORT = process.env.REACT_APP_API_PORT ? `:${process.env.REACT_APP_API_PORT}` : '';
-const db_url = `https://${API_HOSTNAME}${API_PORT}/api/report`;
+const PROTOCOL = process.env.REACT_APP_API_PROTOCOL || 'https';
+// NOTE: React's build process only inlines env vars prefixed with REACT_APP_.
+// Plain process.env.USE_PROXY would always be undefined at runtime.
+const USE_PROXY = process.env.REACT_APP_USE_PROXY !== 'false';
+const db_url = USE_PROXY
+  ? `${PROTOCOL}://${API_HOSTNAME}${API_PORT}/api/report`
+  : 'http://127.0.0.1:8001';
 
 export const current_report_id = '7ce7c617-82ab-4fa0-8cfd-051c02751862';
 

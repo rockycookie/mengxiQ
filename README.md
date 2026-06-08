@@ -9,6 +9,8 @@ The UI is done by React TypeScript. NodeJS JSON Server is used as a REST backend
 - [Deploy RaspberryPi](./deploy/DEPLOY_RASPBERRYPI.md)
 
 ## To run locally
+No nginx required — services are accessed directly over HTTP.
+
 ### 1. Build
 ```sh
 nvm use v21.1.0
@@ -25,6 +27,8 @@ npm install pm2@latest -g
 cd deploy   ## from the root of this project
 pm2 start pm2-local.config.js
 ```
+
+Access the app at `http://127.0.0.1:3019/`
 
 ## To run as dev
 ### 0. Setup
