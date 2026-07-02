@@ -9,6 +9,8 @@ npx create-react-app ts-app --template typescript
 
 In the project directory, you can run:
 
+### `nvm use v21.1.0`
+
 ### `npm start`
 
 Runs the app in the development mode.\

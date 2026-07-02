@@ -297,14 +297,17 @@ function Report(): JSX.Element {
       filtered = filtered.filter(item => selectedQueues.has(item.qname));
     }
 
-    // Sort by priority (high to low), then by creation time (old to new)
+    // Sort by priority (high to low), then by creation time
     return filtered.sort((a, b) => {
       const priorityDiff = getPriorityRank(b.priorityId) - getPriorityRank(a.priorityId);
       if (priorityDiff !== 0) {
         return priorityDiff;
       }
-      // When priority is the same, sort by creation time (old to new)
-      return a.createdAt - b.createdAt;
+      // 'all' tab: new to old; other tabs: new to old
+      if (activeTab === 'all') {
+        return b.createdAt - a.createdAt;
+      }
+      return b.createdAt - a.createdAt;
     });
   }
 
