@@ -31,7 +31,7 @@ module.exports = {
     {
       name: 'mengxiq-app-local',
       script: 'npx',
-      args: 'http-server ../mengxiq/mgq-local -p 3019 -a 127.0.0.1',
+      args: 'serve -s ../mengxiq/mgq-local -l tcp://127.0.0.1:3019',
       cwd: __dirname,
       exec_mode: 'fork',
       instances: 1,

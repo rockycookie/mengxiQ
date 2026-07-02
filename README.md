@@ -28,6 +28,12 @@ cd deploy   ## from the root of this project
 pm2 start pm2-local.config.js
 ```
 
+To reload after config changes:
+```sh
+pm2 delete mengxiq-app-local
+pm2 start pm2-local.config.js --only mengxiq-app-local
+```
+
 Access the app at `http://127.0.0.1:3019/`
 
 ## To run as dev
@@ -76,5 +82,5 @@ meilisearch --db-path ./search_engine/real_db --http-addr 127.0.0.1:8011
 ```sh
 cd mengxiq
 npm run build:local
-npx http-server build -p 3009 -a localhost
+npx serve -s build -l tcp://localhost:3009
 ```
