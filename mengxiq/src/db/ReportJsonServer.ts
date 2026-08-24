@@ -32,6 +32,8 @@ export class ReportItem {
     public qname: string,
     public qid: string,
     public id: string,
+    public startDate: string | null = null,
+    public deadline: string | null = null,
   ) {
     const now = new Date();
     this.reportedAt = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();

@@ -14,4 +14,6 @@ export type ReportDisplayItem = {
   itemId?: string; // Only for in-progress items (original ToDoItem id)
   modifiedAt?: number; // Only for in-progress items
   modified_time?: string; // Only for in-progress items (display format)
+  startDate?: string | null;
+  deadline?: string | null;
 };

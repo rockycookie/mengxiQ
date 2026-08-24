@@ -1,6 +1,6 @@
 {
   "name": "mengxiq",
-  "version": "5.0.4",
+  "version": "5.1.4",
   "private": true,
   "dependencies": {
     "@tailwindcss/typography": "^0.5.19",

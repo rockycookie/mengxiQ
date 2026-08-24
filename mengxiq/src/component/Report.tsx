@@ -77,7 +77,9 @@ function Report(): JSX.Element {
               id: item.id,
               itemId: item.id,
               modifiedAt: modifiedTime,
-              modified_time: new Date(modifiedTime).toLocaleString()
+              modified_time: new Date(modifiedTime).toLocaleString(),
+              startDate: item.startDate || null,
+              deadline: item.deadline || null,
             };
             allInProgressItems.push(displayItem);
           }
@@ -113,7 +115,9 @@ function Report(): JSX.Element {
         item.id!, // Use report id (always expect it to exist)
         item.createdAt,
         item.priorityId,
-        now // Set modified_time to now when undoing
+        now, // Set modified_time to now when undoing
+        item.startDate || null,
+        item.deadline || null
       );
 
       // Add back to the original queue
@@ -130,7 +134,9 @@ function Report(): JSX.Element {
         qname: item.qname,
         qid: item.qid,
         reportedAt: item.reportedAt,
-        id: item.id!
+        id: item.id!,
+        startDate: item.startDate || null,
+        deadline: item.deadline || null,
       };
       await removeReportItemDb(current_report_id, reportItem);
 
@@ -238,7 +244,9 @@ function Report(): JSX.Element {
       qname: item.qname,
       qid: item.qid,
       reportedAt: item.reportedAt,
-      id: item.id
+      id: item.id,
+      startDate: item.startDate || null,
+      deadline: item.deadline || null,
     };
   }
 
@@ -617,6 +625,12 @@ function Report(): JSX.Element {
                                 <span>
                                   📅 Reported: {formatDate(item.reportedAt)}
                                 </span>
+                              )}
+                              {item.startDate && (
+                                <span>📅 Start: {item.startDate}</span>
+                              )}
+                              {item.deadline && (
+                                <span>⏰ Deadline: {item.deadline}</span>
                               )}
                             </div>
                           </div>
