@@ -1,31 +1,37 @@
+const interpreter = process.env.HOME + '/.nvm/versions/node/v21.1.0/bin/node';
+
 module.exports = {
   apps: [
     {
       name: 'life2026-db-local',
       script: 'npx',
-      args: 'json-server@0.17.4 --watch ../json_server/real_db/work2024.json --port 8002 --host 127.0.0.1',
+      args: 'json-server ../json_server/real_db/work2024.json -p 8002 -h 127.0.0.1',
       cwd: __dirname,
+      interpreter: interpreter,
       exec_mode: 'fork',
       instances: 1,
       autorestart: true,
       watch: false,
       max_memory_restart: '200M',
       env: {
-        NODE_ENV: 'development'
+        NODE_ENV: 'development',
+        PATH: process.env.HOME + '/.nvm/versions/node/v21.1.0/bin:' + process.env.PATH
       }
     },
     {
       name: 'report2026-db-local',
       script: 'npx',
-      args: 'json-server@0.17.4 --watch ../json_server/real_db/report2024.json --port 8001 --host 127.0.0.1',
+      args: 'json-server ../json_server/real_db/report2024.json -p 8001 -h 127.0.0.1',
       cwd: __dirname,
+      interpreter: interpreter,
       exec_mode: 'fork',
       instances: 1,
       autorestart: true,
       watch: false,
       max_memory_restart: '200M',
       env: {
-        NODE_ENV: 'development'
+        NODE_ENV: 'development',
+        PATH: process.env.HOME + '/.nvm/versions/node/v21.1.0/bin:' + process.env.PATH
       }
     },
     {
@@ -33,13 +39,15 @@ module.exports = {
       script: 'npx',
       args: 'serve -s ../mengxiq/mgq-local -l tcp://127.0.0.1:3019',
       cwd: __dirname,
+      interpreter: interpreter,
       exec_mode: 'fork',
       instances: 1,
       autorestart: true,
       watch: false,
       max_memory_restart: '100M',
       env: {
-        NODE_ENV: 'development'
+        NODE_ENV: 'development',
+        PATH: process.env.HOME + '/.nvm/versions/node/v21.1.0/bin:' + process.env.PATH
       }
     },
     {
