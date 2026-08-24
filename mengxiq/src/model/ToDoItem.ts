@@ -5,6 +5,8 @@ export class ToDoItem {
     public id: string,
     public created_time: number,
     public priorityId: string,
-    public modified_time: number = created_time
+    public modified_time: number = created_time,
+    public startDate: string | null = null,
+    public deadline: string | null = null
   ) { }
 }

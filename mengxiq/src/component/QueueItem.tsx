@@ -10,10 +10,12 @@ function QueueItem(
     description: string,
     link: string,
     priorityId: string,
+    startDate: string | null,
+    deadline: string | null,
     isEditing: boolean,
     onEdit: () => void,
     onCancelEdit: () => void,
-    onSaveEdit: (description: string, link: string, priorityId: string) => void,
+    onSaveEdit: (description: string, link: string, priorityId: string, startDate: string | null, deadline: string | null) => void,
     deleteFuncion: () => void,
     reportFuncion: () => void,
   }
@@ -21,6 +23,8 @@ function QueueItem(
   const [editDescription, setEditDescription] = useState(props.description);
   const [editLink, setEditLink] = useState(props.link);
   const [editPriorityId, setEditPriorityId] = useState(props.priorityId);
+  const [editStartDate, setEditStartDate] = useState(props.startDate || '');
+  const [editDeadline, setEditDeadline] = useState(props.deadline || '');
   const [encryptOnSave, setEncryptOnSave] = useState(isEncryptedFormat(props.description));
   const [decryptError, setDecryptError] = useState<string | null>(null);
   const [isDecrypting, setIsDecrypting] = useState(false);
@@ -99,13 +103,15 @@ function QueueItem(
         return;
       }
     }
-    props.onSaveEdit(descToSave, editLink, editPriorityId);
+    props.onSaveEdit(descToSave, editLink, editPriorityId, editStartDate || null, editDeadline || null);
   };
 
   const handleCancel = () => {
     setEditDescription(props.description);
     setEditLink(props.link);
     setEditPriorityId(props.priorityId);
+    setEditStartDate(props.startDate || '');
+    setEditDeadline(props.deadline || '');
     setDecryptError(null);
     setIsDecrypting(false);
     props.onCancelEdit();
@@ -186,6 +192,28 @@ function QueueItem(
             </div>
           </div>
 
+          {/* Dates */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Starting Date</label>
+              <input
+                type="date"
+                value={editStartDate}
+                onChange={e => setEditStartDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
+              <input
+                type="date"
+                value={editDeadline}
+                onChange={e => setEditDeadline(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
           {/* Action Buttons */}
           <div className="flex gap-2">
             <button
@@ -248,6 +276,13 @@ function QueueItem(
           {priorityDisplay}
         </span>
       </div>
+
+      {(props.startDate || props.deadline) && (
+        <div className="mt-2 flex gap-4 text-sm text-gray-500">
+          {props.startDate && <span>📅 Start: {props.startDate}</span>}
+          {props.deadline && <span>⏰ Deadline: {props.deadline}</span>}
+        </div>
+      )}
 
       <div className="mt-3 flex gap-2 flex-wrap">
         <button

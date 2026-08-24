@@ -22,6 +22,8 @@ function Queue(
   const [showForm, setShowForm] = useState(true);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [encryptNewItem, setEncryptNewItem] = useState(false);
+  const [curStartDate, setCurStartDate] = useState<string>('');
+  const [curDeadline, setCurDeadline] = useState<string>('');
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const queueDescriptionRef = useRef<HTMLTextAreaElement>(null);
 
@@ -127,7 +129,9 @@ function Queue(
         uuidv4(),
         now,
         curPriorityId,
-        now
+        now,
+        curStartDate || null,
+        curDeadline || null
       );
       newItems.push(newItem);
       newItems.sort(sortAlg);
@@ -140,6 +144,8 @@ function Queue(
       setCurLink('');
       setCurPriorityId('select_priority');
       setEncryptNewItem(false);
+      setCurStartDate('');
+      setCurDeadline('');
     };
 
     doAdd();
@@ -194,7 +200,7 @@ function Queue(
     deleteItemDb(props.qid, itemId);
   }
 
-  function updateItem(itemId: string, description: string, link: string, priorityId: string) {
+  function updateItem(itemId: string, description: string, link: string, priorityId: string, startDate: string | null, deadline: string | null) {
     const updatedItems = items.map(item => {
       if (item.id === itemId) {
         const updatedItem = new ToDoItem(
@@ -203,7 +209,9 @@ function Queue(
           item.id,
           item.created_time,
           priorityId,
-          Date.now()
+          Date.now(),
+          startDate,
+          deadline
         );
         updateItemDb(props.qid, updatedItem);
         return updatedItem;
@@ -310,6 +318,28 @@ function Queue(
               />
             </div>
 
+            {/* Dates */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Starting Date (optional)</label>
+                <input
+                  type="date"
+                  value={curStartDate}
+                  onChange={e => setCurStartDate(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Deadline (optional)</label>
+                <input
+                  type="date"
+                  value={curDeadline}
+                  onChange={e => setCurDeadline(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
             {/* Encrypt Toggle */}
             <div className="flex items-center gap-2">
               <button
@@ -413,10 +443,12 @@ function Queue(
               description={d.description}
               link={d.link}
               priorityId={d.priorityId}
+              startDate={d.startDate || null}
+              deadline={d.deadline || null}
               isEditing={editingItemId === d.id}
               onEdit={() => setEditingItemId(d.id)}
               onCancelEdit={() => setEditingItemId(null)}
-              onSaveEdit={(desc, link, priority) => updateItem(d.id, desc, link, priority)}
+              onSaveEdit={(desc, link, priority, startDate, deadline) => updateItem(d.id, desc, link, priority, startDate, deadline)}
               deleteFuncion={() => deleteItem(d.id)}
               reportFuncion={() => reportItem(d.id)}
             />;
