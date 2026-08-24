@@ -7,6 +7,7 @@ import { addItemDb, deleteItemDb, getQueueDb, updateItemDb, updateQueueDb } from
 import { ToDoItem } from '../model/ToDoItem';
 import { ReportItem, addReportItemDb, current_report_id } from '../db/ReportJsonServer';
 import { hasSessionPassphrase, encryptText } from '../utils/encryption';
+import DeadlineTimeline from './DeadlineTimeline';
 
 function Queue(
   props: { qid: string, queueReloadTrigger: number }
@@ -423,6 +424,9 @@ function Queue(
           )}
         </div>
       )}
+
+      {/* Deadline Timeline */}
+      <DeadlineTimeline items={items} />
 
       {/* Items Summary */}
       <div className="mb-4 flex justify-between items-center">
