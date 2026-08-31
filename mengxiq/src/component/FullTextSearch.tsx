@@ -8,7 +8,13 @@ import { ReportDisplayItem } from '../model/ReportDisplayItem';
 import { loadReportsToSearch, searchReports, checkSearchHealth, getIndexStats, SearchDocument } from '../db/MeilisearchService';
 import { getHostname } from '../utils';
 
-function FullTextSearch(): JSX.Element {
+interface FullTextSearchProps {
+  selectedQueues: Set<string>;
+  onSearchResultsChange?: (results: ReportDisplayItem[]) => void;
+  queueFilterNode?: React.ReactNode;
+}
+
+function FullTextSearch({ selectedQueues, onSearchResultsChange, queueFilterNode }: FullTextSearchProps): JSX.Element {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [searchResults, setSearchResults] = useState<ReportDisplayItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -196,6 +202,7 @@ function FullTextSearch(): JSX.Element {
         .filter((item): item is ReportDisplayItem => item !== undefined);
       
       setSearchResults(fullResults);
+      onSearchResultsChange?.(fullResults);
     } catch (err) {
       console.error('Error searching:', err);
       setError('Failed to search. Please check if Meilisearch is running and data is loaded.');
@@ -210,6 +217,7 @@ function FullTextSearch(): JSX.Element {
     setSearchResults([]);
     setHasSearched(false);
     setError(null);
+    onSearchResultsChange?.([]);
   }
 
   async function undoReportItem(item: ReportDisplayItem) {
@@ -260,6 +268,10 @@ function FullTextSearch(): JSX.Element {
       alert('Failed to undo report item. Please try again.');
     }
   }
+
+  const displayedResults = selectedQueues.size > 0
+    ? searchResults.filter(r => selectedQueues.has(r.qname))
+    : searchResults;
 
   function getPriorityColor(priority: string): string {
     const priorityLower = priority.toLowerCase();
@@ -358,16 +370,19 @@ function FullTextSearch(): JSX.Element {
         </div>
       )}
 
+      {/* Queue Filter (injected from parent) */}
+      {queueFilterNode}
+
       {/* Search Results */}
       {hasSearched && (
         <div>
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-gray-800">
-              Search Results {searchResults.length > 0 && `(${searchResults.length})`}
+              Search Results {displayedResults.length > 0 && `(${displayedResults.length})`}
             </h3>
           </div>
 
-          {searchResults.length === 0 ? (
+          {displayedResults.length === 0 ? (
             <div className="p-12 text-center bg-gray-50 rounded-lg">
               <p className="text-gray-500 text-lg">
                 {loading ? 'Searching...' : 'No results found'}
@@ -375,7 +390,7 @@ function FullTextSearch(): JSX.Element {
             </div>
           ) : (
             <div className="space-y-4">
-              {searchResults.map((result) => (
+              {displayedResults.map((result) => (
                 <div
                   key={result.id}
                   className="p-6 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-150"

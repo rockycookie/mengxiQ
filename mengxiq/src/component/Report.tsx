@@ -46,6 +46,7 @@ function Report(): JSX.Element {
   const [currentPage, setCurrentPage] = useState(1);
   const [customStartDate, setCustomStartDate] = useState<number>(() => getDefaultStartDateTimestamp());
   const [customEndDate, setCustomEndDate] = useState<number>(() => getTodayTimestampStatic());
+  const [searchResultItems, setSearchResultItems] = useState<ReportDisplayItem[]>([]);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -204,6 +205,21 @@ function Report(): JSX.Element {
   }
 
   function getUniqueQueues(): string[] {
+    if (activeTab === 'search') {
+      const searchQueueNames = new Set(searchResultItems.map(item => item.qname));
+      const activeQueueNames = new Set(queues.map(q => q.name));
+
+      const orderedQueues = queues
+        .filter(q => searchQueueNames.has(q.name))
+        .map(q => q.name);
+
+      const deletedQueues = Array.from(searchQueueNames)
+        .filter(qname => !activeQueueNames.has(qname))
+        .sort();
+
+      return [...orderedQueues, ...deletedQueues];
+    }
+
     if (!report || !report.items) return [];
 
     // Get date-filtered items to check which queues have items
@@ -348,6 +364,7 @@ function Report(): JSX.Element {
 
   const uniqueQueues = getUniqueQueues();
   const dateFilteredItems = getDateFilteredItems();
+  const queueFilterItems = activeTab === 'search' ? searchResultItems : dateFilteredItems;
   const filteredItems = getFilteredItems();
   const paginatedItems = getPaginatedItems();
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
@@ -495,7 +512,48 @@ function Report(): JSX.Element {
 
           {/* Search Tab Content */}
           {activeTab === 'search' ? (
-            <FullTextSearch />
+            <FullTextSearch
+              selectedQueues={selectedQueues}
+              onSearchResultsChange={setSearchResultItems}
+              queueFilterNode={
+                uniqueQueues.length > 0 ? (
+                  <div className="mb-6 px-0 py-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <div className="mb-2 px-4">
+                      <label className="text-sm font-medium text-gray-700">
+                        📋 Filter by Queue:
+                      </label>
+                    </div>
+                    <div className="flex flex-wrap gap-2 px-4">
+                      <button
+                        onClick={toggleAllQueues}
+                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${selectedQueues.size === 0 || selectedQueues.size === uniqueQueues.length
+                          ? 'bg-blue-500 text-white shadow-md'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                      >
+                        {(selectedQueues.size === 0 || selectedQueues.size === uniqueQueues.length) ? '✓ ' : ''}All Queues ({queueFilterItems.length})
+                      </button>
+                      {uniqueQueues.map((queue) => {
+                        const count = queueFilterItems.filter(item => item.qname === queue).length;
+                        const isSelected = selectedQueues.size > 0 && selectedQueues.has(queue);
+                        return (
+                          <button
+                            key={queue}
+                            onClick={() => toggleQueue(queue)}
+                            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${isSelected
+                              ? 'bg-blue-500 text-white shadow-md'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              }`}
+                          >
+                            {isSelected ? '✓ ' : ''}{queue} ({count})
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : undefined
+              }
+            />
           ) : (
             <>
               {/* Date Picker for Recent tab */}
@@ -553,12 +611,12 @@ function Report(): JSX.Element {
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                         }`}
                     >
-                      {(selectedQueues.size === 0 || selectedQueues.size === uniqueQueues.length) ? '✓ ' : ''}All Queues ({dateFilteredItems.length})
+                      {(selectedQueues.size === 0 || selectedQueues.size === uniqueQueues.length) ? '✓ ' : ''}All Queues ({queueFilterItems.length})
                     </button>
 
                     {/* Individual Queue Cards */}
                     {uniqueQueues.map((queue) => {
-                      const count = dateFilteredItems.filter(item => item.qname === queue).length;
+                      const count = queueFilterItems.filter(item => item.qname === queue).length;
                       const isSelected = selectedQueues.size > 0 && selectedQueues.has(queue);
                       return (
                         <button
