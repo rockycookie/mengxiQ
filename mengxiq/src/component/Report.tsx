@@ -11,15 +11,41 @@ import FullTextSearch from './FullTextSearch';
 import { isEncryptedFormat } from '../utils/encryption';
 import EncryptedDescriptionView from './EncryptedDescriptionView';
 
+function getDefaultStartDateTimestamp(): number {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  let daysToSubtract: number;
+  switch (dayOfWeek) {
+    case 1: daysToSubtract = 4; break;
+    case 0: daysToSubtract = 3; break;
+    case 6: daysToSubtract = 2; break;
+    default: daysToSubtract = 1; break;
+  }
+  const lastWorkDay = new Date(today);
+  lastWorkDay.setDate(today.getDate() - daysToSubtract);
+  return lastWorkDay.getFullYear() * 10000 +
+    (lastWorkDay.getMonth() + 1) * 100 +
+    lastWorkDay.getDate();
+}
+
+function getTodayTimestampStatic(): number {
+  const today = new Date();
+  return today.getFullYear() * 10000 +
+    (today.getMonth() + 1) * 100 +
+    today.getDate();
+}
+
 function Report(): JSX.Element {
   const [report, setReport] = useState<ReportType | null>(null);
   const [queues, setQueues] = useState<PriorityQueue[]>([]);
   const [inProgressItems, setInProgressItems] = useState<ReportDisplayItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'all' | 'recent' | 'today' | 'search'>('recent');
+  const [activeTab, setActiveTab] = useState<'all' | 'searchByDates' | 'today' | 'search'>('searchByDates');
   const [selectedQueues, setSelectedQueues] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
+  const [customStartDate, setCustomStartDate] = useState<number>(() => getDefaultStartDateTimestamp());
+  const [customEndDate, setCustomEndDate] = useState<number>(() => getTodayTimestampStatic());
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -165,38 +191,6 @@ function Report(): JSX.Element {
     return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   }
 
-  function getLastWorkDayTimestamp(): number {
-    const today = new Date();
-    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
-
-    // If today is Monday (1), go back to Thursday (4 days ago) as I do not do report analysis on Friday nor weekend
-    // If today is Sunday (0), go back 3 days to Thursday
-    // If today is Saturday (6), go back 2 days to Thursday
-    // Otherwise, go back 1 day (yesterday)
-    let daysToSubtract: number;
-    switch (dayOfWeek) {
-      case 1: // Monday
-        daysToSubtract = 4;
-        break;
-      case 0: // Sunday
-        daysToSubtract = 3;
-        break;
-      case 6: // Saturday
-        daysToSubtract = 2;
-        break;
-      default: // Tuesday-Friday
-        daysToSubtract = 1;
-        break;
-    }
-
-    const lastWorkDay = new Date(today);
-    lastWorkDay.setDate(today.getDate() - daysToSubtract);
-
-    return lastWorkDay.getFullYear() * 10000 +
-      (lastWorkDay.getMonth() + 1) * 100 +
-      lastWorkDay.getDate();
-  }
-
   function getTodayTimestamp(): number {
     const today = new Date();
     return today.getFullYear() * 10000 +
@@ -259,12 +253,9 @@ function Report(): JSX.Element {
     }
 
     // Apply date filter based on active tab
-    if (activeTab === 'recent') {
-      const lastWorkDay = getLastWorkDayTimestamp();
-      const today = getTodayTimestamp();
-
+    if (activeTab === 'searchByDates') {
       reportItems = reportItems.filter(item =>
-        item.reportedAt && item.reportedAt >= lastWorkDay && item.reportedAt <= today
+        item.reportedAt && item.reportedAt >= customStartDate && item.reportedAt <= customEndDate
       );
 
       // Filter in-progress items by modification time
@@ -274,7 +265,7 @@ function Report(): JSX.Element {
         const modifiedYYYYMMDD = modifiedDate.getFullYear() * 10000 +
           (modifiedDate.getMonth() + 1) * 100 +
           modifiedDate.getDate();
-        return modifiedYYYYMMDD >= lastWorkDay && modifiedYYYYMMDD <= today;
+        return modifiedYYYYMMDD >= customStartDate && modifiedYYYYMMDD <= customEndDate;
       });
     } else if (activeTab === 'today') {
       const today = getTodayTimestamp();
@@ -328,7 +319,7 @@ function Report(): JSX.Element {
     return filtered.slice(startIndex, endIndex);
   }
 
-  function handleTabChange(tab: 'all' | 'recent' | 'today' | 'search') {
+  function handleTabChange(tab: 'all' | 'searchByDates' | 'today' | 'search') {
     setActiveTab(tab);
     setCurrentPage(1); // Reset to first page when switching tabs
   }
@@ -362,16 +353,13 @@ function Report(): JSX.Element {
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
   // Calculate recent items count for tab display
-  const recentItemsCount = (() => {
-    const lastWorkDay = getLastWorkDayTimestamp();
-    const today = getTodayTimestamp();
-
+  const sinceDateItemsCount = (() => {
     let count = 0;
 
     // Count completed items
     if (report && report.items) {
       count += report.items.filter(item =>
-        item.reportedAt >= lastWorkDay && item.reportedAt <= today
+        item.reportedAt >= customStartDate && item.reportedAt <= customEndDate
       ).length;
     }
 
@@ -381,7 +369,7 @@ function Report(): JSX.Element {
       const modifiedYYYYMMDD = modifiedDate.getFullYear() * 10000 +
         (modifiedDate.getMonth() + 1) * 100 +
         modifiedDate.getDate();
-      return modifiedYYYYMMDD >= lastWorkDay && modifiedYYYYMMDD <= today;
+      return modifiedYYYYMMDD >= customStartDate && modifiedYYYYMMDD <= customEndDate;
     }).length;
 
     return count;
@@ -467,13 +455,13 @@ function Report(): JSX.Element {
           <div className="border-b border-gray-200">
             <div className="flex gap-2 px-6">
               <button
-                onClick={() => handleTabChange('recent')}
-                className={`px-4 py-3 font-medium text-sm transition-all duration-150 border-b-2 ${activeTab === 'recent'
+                onClick={() => handleTabChange('searchByDates')}
+                className={`px-4 py-3 font-medium text-sm transition-all duration-150 border-b-2 ${activeTab === 'searchByDates'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-600 hover:text-gray-800'
                   }`}
               >
-                Since Last Workday ({recentItemsCount})
+                Search by Dates ({sinceDateItemsCount})
               </button>
               <button
                 onClick={() => handleTabChange('today')}
@@ -510,6 +498,44 @@ function Report(): JSX.Element {
             <FullTextSearch />
           ) : (
             <>
+              {/* Date Picker for Recent tab */}
+              {activeTab === 'searchByDates' && (
+                <div className="px-6 py-3 bg-gray-50 border-b border-gray-200 flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-700">From:</label>
+                    <input
+                      type="date"
+                      value={formatDate(customStartDate)}
+                      onChange={(e) => {
+                        const parts = e.target.value.split('-');
+                        if (parts.length === 3) {
+                          const ts = parseInt(parts[0]) * 10000 + parseInt(parts[1]) * 100 + parseInt(parts[2]);
+                          setCustomStartDate(ts);
+                          setCurrentPage(1);
+                        }
+                      }}
+                      className="px-2 py-1 border border-gray-300 rounded text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-700">To:</label>
+                    <input
+                      type="date"
+                      value={formatDate(customEndDate)}
+                      onChange={(e) => {
+                        const parts = e.target.value.split('-');
+                        if (parts.length === 3) {
+                          const ts = parseInt(parts[0]) * 10000 + parseInt(parts[1]) * 100 + parseInt(parts[2]);
+                          setCustomEndDate(ts);
+                          setCurrentPage(1);
+                        }
+                      }}
+                      className="px-2 py-1 border border-gray-300 rounded text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Queue Filters */}
               {uniqueQueues.length > 0 && (
                 <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
@@ -720,8 +746,10 @@ function Report(): JSX.Element {
                     </div>
                   )}
                 </>
-              )}            </>
-          )}        </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
