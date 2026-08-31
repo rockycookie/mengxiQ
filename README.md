@@ -1,7 +1,20 @@
 # mengxiQ
-MengxiQ is a to-do list. Users organize to-do items across multiple task queues, prioritize/catogrize them into 4 priority groups, then "report" the completed items to a separate reporting view (so that engineers/developers know what to say in the next standup meeting lol).
+MengxiQ is a to-do list for engineers/developers. Users organize to-do items across multiple task queues, prioritize them into 4 color-coded priority groups, and "report" completed items to a separate reporting view — so you know exactly what to say in the next standup meeting.
 
-The principle is to **prioritize, record and forget quickly**, which minimizes the interruption to the currently in-progress task. And the user can come back later with a good sense of the items.
+The principle is to 
+1. **prioritize, record and forget quickly**
+2. **remember quickly**
+
+which minimizes the interruption to the currently in-progress task. The user can come back later with a good sense of the items. And the user can search history from those items as a knowledge base.
+
+Key features:
+- **Queue management** — create, edit, reorder (drag-and-drop), soft-delete and restore queues, each with optional markdown descriptions
+- **To-do items** — add/edit/delete items with description (markdown), reference link, priority, optional start date and deadline
+- **Deadline timeline** — Gantt-chart-like visualization of items with deadlines, with a today indicator
+- **Encryption** — optionally encrypt item descriptions with a session passphrase; on-click decryption with hint support
+- **Reporting** — mark items as completed to move them into a report; filter by date range (defaults to last workday → today), by today, or view all; filter by queue; undo completed items back to their queue; paginated results
+- **Full-text search** — powered by Meilisearch with fuzzy matching across all items (completed and in-progress), filterable by queue
+- **Deleted queues** — soft-deleted queues can be restored or permanently removed
 
 The UI is done by React TypeScript. NodeJS JSON Server is used as a REST backend, which is more than enough for the currently single-user scenario~
 
