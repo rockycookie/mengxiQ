@@ -8,6 +8,7 @@ import { ToDoItem } from '../model/ToDoItem';
 import { ReportDisplayItem } from '../model/ReportDisplayItem';
 import { getHostname } from '../utils';
 import FullTextSearch from './FullTextSearch';
+import QueueFilter from './QueueFilter';
 import { isEncryptedFormat } from '../utils/encryption';
 import EncryptedDescriptionView from './EncryptedDescriptionView';
 
@@ -516,42 +517,14 @@ function Report(): JSX.Element {
               selectedQueues={selectedQueues}
               onSearchResultsChange={setSearchResultItems}
               queueFilterNode={
-                uniqueQueues.length > 0 ? (
-                  <div className="mb-6 px-0 py-4 bg-gray-50 border border-gray-200 rounded-lg">
-                    <div className="mb-2 px-4">
-                      <label className="text-sm font-medium text-gray-700">
-                        📋 Filter by Queue:
-                      </label>
-                    </div>
-                    <div className="flex flex-wrap gap-2 px-4">
-                      <button
-                        onClick={toggleAllQueues}
-                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${selectedQueues.size === 0 || selectedQueues.size === uniqueQueues.length
-                          ? 'bg-blue-500 text-white shadow-md'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                          }`}
-                      >
-                        {(selectedQueues.size === 0 || selectedQueues.size === uniqueQueues.length) ? '✓ ' : ''}All Queues ({queueFilterItems.length})
-                      </button>
-                      {uniqueQueues.map((queue) => {
-                        const count = queueFilterItems.filter(item => item.qname === queue).length;
-                        const isSelected = selectedQueues.size > 0 && selectedQueues.has(queue);
-                        return (
-                          <button
-                            key={queue}
-                            onClick={() => toggleQueue(queue)}
-                            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${isSelected
-                              ? 'bg-blue-500 text-white shadow-md'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                              }`}
-                          >
-                            {isSelected ? '✓ ' : ''}{queue} ({count})
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : undefined
+                <QueueFilter
+                  uniqueQueues={uniqueQueues}
+                  selectedQueues={selectedQueues}
+                  items={queueFilterItems}
+                  onToggleQueue={toggleQueue}
+                  onToggleAll={toggleAllQueues}
+                  className="mb-6 px-4 py-4 bg-gray-50 border border-gray-200 rounded-lg"
+                />
               }
             />
           ) : (
@@ -594,46 +567,14 @@ function Report(): JSX.Element {
                 </div>
               )}
 
-              {/* Queue Filters */}
-              {uniqueQueues.length > 0 && (
-                <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                  <div className="mb-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      📋 Filter by Queue:
-                    </label>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {/* All Queues Toggle */}
-                    <button
-                      onClick={toggleAllQueues}
-                      className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${selectedQueues.size === 0 || selectedQueues.size === uniqueQueues.length
-                        ? 'bg-blue-500 text-white shadow-md'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
-                    >
-                      {(selectedQueues.size === 0 || selectedQueues.size === uniqueQueues.length) ? '✓ ' : ''}All Queues ({queueFilterItems.length})
-                    </button>
-
-                    {/* Individual Queue Cards */}
-                    {uniqueQueues.map((queue) => {
-                      const count = queueFilterItems.filter(item => item.qname === queue).length;
-                      const isSelected = selectedQueues.size > 0 && selectedQueues.has(queue);
-                      return (
-                        <button
-                          key={queue}
-                          onClick={() => toggleQueue(queue)}
-                          className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 ${isSelected
-                            ? 'bg-blue-500 text-white shadow-md'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                        >
-                          {isSelected ? '✓ ' : ''}{queue} ({count})
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+              <QueueFilter
+                uniqueQueues={uniqueQueues}
+                selectedQueues={selectedQueues}
+                items={queueFilterItems}
+                onToggleQueue={toggleQueue}
+                onToggleAll={toggleAllQueues}
+                className="px-6 py-4 bg-gray-50 border-b border-gray-200"
+              />
 
               {/* Report Items */}
               {paginatedItems.length === 0 ? (
