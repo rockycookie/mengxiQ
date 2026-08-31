@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { ReportItem, getReportDb, current_report_id } from '../db/ReportJsonServer';
-import { listQueuesDb, getQueueDb } from '../db/JsonServer';
+import { ReportItem, getReportDb, current_report_id, removeReportItemDb } from '../db/ReportJsonServer';
+import { listQueuesDb, getQueueDb, addItemDb } from '../db/JsonServer';
+import { ToDoItem } from '../model/ToDoItem';
 import { priorityLevelMap } from '../model/Priority';
 import { ReportDisplayItem } from '../model/ReportDisplayItem';
 import { loadReportsToSearch, searchReports, checkSearchHealth, getIndexStats, SearchDocument } from '../db/MeilisearchService';
@@ -153,6 +154,8 @@ function FullTextSearch(): JSX.Element {
             qid: item.qid,
             id: item.id,
             reportedAt: item.reportedAt,
+            startDate: item.startDate || null,
+            deadline: item.deadline || null,
           };
           itemsMap.set(item.id, displayItem);
         });
@@ -179,6 +182,8 @@ function FullTextSearch(): JSX.Element {
               id: item.id,
               modifiedAt: modifiedTime,
               modified_time: new Date(modifiedTime).toLocaleString(),
+              startDate: item.startDate || null,
+              deadline: item.deadline || null,
             };
             itemsMap.set(item.id, displayItem);
           }
@@ -205,6 +210,55 @@ function FullTextSearch(): JSX.Element {
     setSearchResults([]);
     setHasSearched(false);
     setError(null);
+  }
+
+  async function undoReportItem(item: ReportDisplayItem) {
+    if (item.type !== 'completed' || !item.reportedAt) {
+      return;
+    }
+
+    try {
+      const queue = await getQueueDb(item.qid);
+      if (!queue) {
+        alert(`Queue "${item.qname}" no longer exists. Cannot undo this item.`);
+        return;
+      }
+
+      const now = Date.now();
+      const todoItem = new ToDoItem(
+        item.description,
+        item.link,
+        item.id,
+        item.createdAt,
+        item.priorityId,
+        now,
+        item.startDate || null,
+        item.deadline || null
+      );
+
+      await addItemDb(item.qid, todoItem);
+
+      const reportItem: ReportItem = {
+        description: item.description,
+        link: item.link,
+        priorityId: item.priorityId,
+        priority: item.priority,
+        createdAt: item.createdAt,
+        create_time: item.create_time,
+        qname: item.qname,
+        qid: item.qid,
+        reportedAt: item.reportedAt,
+        id: item.id,
+        startDate: item.startDate || null,
+        deadline: item.deadline || null,
+      };
+      await removeReportItemDb(current_report_id, reportItem);
+
+      setSearchResults(prev => prev.filter(r => r.id !== item.id));
+    } catch (err) {
+      console.error('Error undoing report item:', err);
+      alert('Failed to undo report item. Please try again.');
+    }
   }
 
   function getPriorityColor(priority: string): string {
@@ -392,14 +446,29 @@ function FullTextSearch(): JSX.Element {
                             📅 Reported: {formatDate(result.reportedAt)}
                           </span>
                         )}
+                        {result.startDate && (
+                          <span>📅 Start: {result.startDate}</span>
+                        )}
+                        {result.deadline && (
+                          <span>⏰ Deadline: {result.deadline}</span>
+                        )}
                       </div>
                     </div>
 
-                    {/* Priority Badge */}
-                    <div className="flex-shrink-0">
+                    {/* Priority Badge and Undo Button */}
+                    <div className="flex-shrink-0 flex flex-col gap-2 items-end">
                       <div className={`px-4 py-2 rounded-lg border-2 ${getPriorityColor(result.priority)} font-semibold text-sm text-center min-w-[100px]`}>
                         {result.priority}
                       </div>
+                      {result.type === 'completed' && (
+                        <button
+                          onClick={() => undoReportItem(result)}
+                          className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-150 font-medium text-sm"
+                          title="Return item back to queue"
+                        >
+                          ↩️ Undo
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
