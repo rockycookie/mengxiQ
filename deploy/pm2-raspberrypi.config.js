@@ -68,6 +68,21 @@ module.exports = {
       env: {
         NODE_ENV: 'production'
       }
+    },
+    {
+      name: 'backup-json-db',
+      script: 'backup-json-db.js',
+      cwd: __dirname,
+      exec_mode: 'fork',
+      instances: 1,
+      autorestart: false,
+      watch: false,
+      cron_restart: '0 * * * *',
+      max_memory_restart: '100M',
+      env: {
+        NODE_ENV: 'production',
+        BACKUP_FILES: 'life2026.json, report2026.json'
+      }
     }
   ]
 };

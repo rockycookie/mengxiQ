@@ -32,6 +32,7 @@ sudo systemctl stop nginx
 
    scp deploy/pm2-raspberrypi.config.js admin11@raspberrypi.local:/home/admin11/workspace/mengxiq
    scp nginx/nginx.conf admin11@raspberrypi.local:/home/admin11/workspace/mengxiq/nginx.conf
+   scp backup/backup-json-db.js admin11@raspberrypi.local:/home/admin11/workspace/mengxiq/backup-json-db.js
    scp -r mengxiq/mgq-raspberrypi admin11@raspberrypi.local:/home/admin11/workspace/mengxiq/mgq-raspberrypi
    ```
    - note, I needed to delete the folder before scp the new one `admin11@raspberrypi:~/workspace/mengxiq $ rm -rf mgq-raspberrypi`; otherwise it kept running the older version

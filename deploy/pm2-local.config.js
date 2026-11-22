@@ -63,6 +63,21 @@ module.exports = {
       env: {
         NODE_ENV: 'development'
       }
+    },
+    {
+      name: 'backup-json-db-local',
+      script: '../backup/backup-json-db.js',
+      cwd: __dirname,
+      exec_mode: 'fork',
+      instances: 1,
+      autorestart: false,
+      watch: false,
+      cron_restart: '0 * * * *',
+      max_memory_restart: '100M',
+      env: {
+        NODE_ENV: 'development',
+        BACKUP_FILES: '../json_server/real_db/work2024.json, ../json_server/real_db/report2024.json'
+      }
     }
   ]
 };
