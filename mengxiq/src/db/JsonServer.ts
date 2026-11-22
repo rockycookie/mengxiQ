@@ -11,6 +11,21 @@ const db_url = USE_PROXY
   ? `${PROTOCOL}://${API_HOSTNAME}${API_PORT}/api/db`
   : 'http://127.0.0.1:8002';
 
+async function fetchWithErrorLog(url: string, options: RequestInit): Promise<Response> {
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    const error = await response.text().catch(() => '');
+    console.error(`API Error: ${response.status} ${response.statusText}`, {
+      url,
+      status: response.status,
+      statusText: response.statusText,
+      body: error,
+      method: options.method
+    });
+  }
+  return response;
+}
+
 export async function listQueuesDb(includeDeleted: boolean = false) {
   const queues = await (await fetch(db_url + '/queues/')).json();
   const filteredQueues = includeDeleted ? queues : queues.filter((q: any) => !q.isDeleted);
@@ -43,7 +58,7 @@ export async function createQueueDb(qname: string, description: string = ''): Pr
     displayOrder: maxOrder + 1,
     description: description
   };
-  await fetch(
+  await fetchWithErrorLog(
     db_url + '/queues/',
     {
       method: 'POST',
@@ -67,7 +82,7 @@ export async function addItemDb(qid: string, item: ToDoItem) {
   } else {
     q.items.push(item);
   }
-  await fetch(
+  await fetchWithErrorLog(
     db_url + '/queues/' + qid,
     {
       method: 'PUT',
@@ -85,7 +100,7 @@ export async function deleteItemDb(qid: string, itemId: string) {
   } else {
     q.items = q.items.filter((item: any) => (item.id !== itemId));
   }
-  await fetch(
+  await fetchWithErrorLog(
     db_url + '/queues/' + qid,
     {
       method: 'PUT',
@@ -105,7 +120,7 @@ export async function updateItemDb(qid: string, updatedItem: ToDoItem) {
       item.id === updatedItem.id ? updatedItem : item
     );
   }
-  await fetch(
+  await fetchWithErrorLog(
     db_url + '/queues/' + qid,
     {
       method: 'PUT',
@@ -123,7 +138,7 @@ export async function softDeleteQueueDb(qid: string) {
   q.isDeleted = true;
   q.deletedAt = Date.now();
 
-  await fetch(
+  await fetchWithErrorLog(
     db_url + '/queues/' + qid,
     {
       method: 'PUT',
@@ -141,7 +156,7 @@ export async function restoreQueueDb(qid: string) {
   q.isDeleted = false;
   q.deletedAt = undefined;
 
-  await fetch(
+  await fetchWithErrorLog(
     db_url + '/queues/' + qid,
     {
       method: 'PUT',
@@ -170,7 +185,7 @@ export async function updateQueueOrderDb(queueIds: string[]) {
     const queue = queues.find((q: any) => q.id === qid);
     if (queue) {
       queue.displayOrder = index;
-      await fetch(
+      await fetchWithErrorLog(
         db_url + '/queues/' + qid,
         {
           method: 'PUT',
@@ -196,7 +211,7 @@ export async function updateQueueDb(qid: string, updates: { name?: string; descr
     q.description = updates.description;
   }
 
-  await fetch(
+  await fetchWithErrorLog(
     db_url + '/queues/' + qid,
     {
       method: 'PUT',
