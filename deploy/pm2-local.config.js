@@ -13,6 +13,7 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: '200M',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       env: {
         NODE_ENV: 'development',
         PATH: process.env.HOME + '/.nvm/versions/node/v21.1.0/bin:' + process.env.PATH
@@ -29,6 +30,7 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: '200M',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       env: {
         NODE_ENV: 'development',
         PATH: process.env.HOME + '/.nvm/versions/node/v21.1.0/bin:' + process.env.PATH
@@ -45,6 +47,7 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: '100M',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       env: {
         NODE_ENV: 'development',
         PATH: process.env.HOME + '/.nvm/versions/node/v21.1.0/bin:' + process.env.PATH
@@ -60,6 +63,7 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: '200M',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       env: {
         NODE_ENV: 'development'
       }
@@ -74,6 +78,7 @@ module.exports = {
       watch: false,
       cron_restart: '0 * * * *',
       max_memory_restart: '100M',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       env: {
         NODE_ENV: 'development',
         BACKUP_FILES: '../json_server/real_db/work2024.json, ../json_server/real_db/report2024.json'

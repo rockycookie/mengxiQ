@@ -9,6 +9,7 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: '100M',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       env: {
         NODE_ENV: 'production'
       }
@@ -23,6 +24,7 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: '200M',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       env: {
         NODE_ENV: 'production'
       }
@@ -37,6 +39,7 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: '200M',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       env: {
         NODE_ENV: 'production'
       }
@@ -51,6 +54,7 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: '100M',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       env: {
         NODE_ENV: 'production'
       }
@@ -65,6 +69,7 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: '200M',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       env: {
         NODE_ENV: 'production'
       }
@@ -79,6 +84,7 @@ module.exports = {
       watch: false,
       cron_restart: '0 * * * *',
       max_memory_restart: '100M',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       env: {
         NODE_ENV: 'production',
         BACKUP_FILES: 'life2026.json, report2026.json'
